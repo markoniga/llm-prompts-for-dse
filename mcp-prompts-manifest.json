@@ -2,24 +2,6 @@
   "version": "2.4.0",
   "last_updated": "2025-06-16T21:54:46Z",
   "prompts": {
-    "data_reconciliation": {
-      "file": "src/llm-prompts/data-reconcilitation.md",
-      "version": "2.2.0",
-      "hash": "e497c4200a1e9f91b93d30b69b0d4ef9",
-      "size":    28905
-    },
-    "git_commit_instructions": {
-      "file": "src/llm-prompts/git-commit-instructions.md", 
-      "version": "2.0.0",
-      "hash": "a7c32e0e79b1c3b78e40c003015ebd6a",
-      "size":    13132
-    },
-    "code_change_planning": {
-      "file": "src/llm-prompts/code-change-planning-instructions.md",
-      "version": "0.1.0",
-      "hash": "e9deb6d40b549878439d9b94b770f197",
-      "size":     5588
-    },
     "interpret_intent": {
       "file": "src/llm-prompts/data-workflow/interpret_intent.prompt",
       "version": "0.1.0",

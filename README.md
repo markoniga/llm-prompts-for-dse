@@ -61,11 +61,6 @@ Once configured, you can use these prompts in your conversations:
 - *"Apply the test_results prompt to help me understand why my dbt tests are failing"*
 - *"Use the create_pr prompt to generate a pull request description for this new analytics model"*
 
-#### **General Development Examples**
-- *"Use the code change planning instructions to help me plan a refactor of our data pipeline"*
-- *"Apply the git commit instructions to help me write better commit messages for this feature"*
-- *"Use the data reconciliation instructions to help me document schema changes between environments"*
-
 ---
 
 ## 📊 Data Workflow Pathway
@@ -108,26 +103,6 @@ flowchart TD
 ---
 
 ## 📚 Available Prompts
-
-### General Prompts
-
-#### `getCodeChangePlanningInstructions`
-
-- **Description:** Provides detailed, step-by-step instructions for planning an LLM-assisted code change.
-  Use this tool to help a software developer and LLM collaboratively create a robust, actionable plan
-  for implementing a code change, including best practices for clarifying requirements,
-  structuring tasks, and managing dependencies.
-- **Returns:** The full contents of [`code-change-planning-instructions.md`](./src/llm-prompts/code-change-planning-instructions.md)
-
-#### `getGitCommitInstructions`
-
-- **Description:** Returns best-practice instructions and examples for writing semantic git commit messages. Use this tool to help a developer or LLM generate clear, conventional commit messages that communicate the intent and context of code changes, following the semantic commit format.
-- **Returns:** The full contents of [`git-commit-instructions.md`](./src/llm-prompts/git-commit-instructions.md)
-
-#### `getDataReconciliationInstructions`
-
-- **Description:** Returns best-practice instructions and examples for data reconciliation. Use this tool to help a developer or LLM generate clear, conventional data reconciliation messages that communicate the intent and context of data changes.
-- **Returns:** The full contents of [`data-reconcilitation.md`](./src/llm-prompts/data-reconcilitation.md)
 
 ### Data Workflow Prompts
 
@@ -253,9 +228,6 @@ These schema reconciliation features ensure that schema changes are properly ass
 ```
 src/
 ├── llm-prompts/               # Root directory for all prompts
-│   ├── code-change-planning-instructions.md
-│   ├── data-reconcilitation.md
-│   ├── git-commit-instructions.md
 │   └── data-workflow/         # Data workflow prompts directory
 │       ├── interpret_intent.prompt
 │       ├── context_gap.prompt
