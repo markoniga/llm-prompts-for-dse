@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -12,61 +11,6 @@ const server = new McpServer({
   name: "mcp-server",
   version: "1.0.0",
 });
-
-server.tool(
-  "getCodeChangePlanningInstructions",
-  `Provides detailed, step-by-step instructions for planning an LLM-assisted code change.
-  Use this tool to help a software developer and LLM collaboratively create a robust, actionable plan
-  for implementing a code change, including best practices for clarifying requirements,
-  structuring tasks, and managing dependencies.`,
-  {}, // No parameters
-  async () => {
-    const promptPath = path.resolve(
-      __dirname,
-      "../src/llm-prompts/code-change-planning-instructions.md"
-    );
-    const text = fs.readFileSync(promptPath, "utf8");
-    return {
-      content: [{ type: "text", text }],
-    };
-  }
-);
-
-server.tool(
-  "getDataReconciliationInstructions",
-  `Returns best-practice instructions and examples for data reconciliation.
-  Use this tool to help a developer or LLM generate clear, conventional data reconciliation messages that
-  communicate the intent and context of data changes, following the semantic commit format.`,
-  {}, // No parameters
-  async () => {
-    const promptPath = path.resolve(
-      __dirname,
-      "../src/llm-prompts/data-reconcilitation.md"
-    );
-    const text = fs.readFileSync(promptPath, "utf8");
-    return {
-      content: [{ type: "text", text }],
-    };
-  }
-);
-
-server.tool(
-  "getGitCommitInstructions",
-  `Returns best-practice instructions and examples for writing semantic git commit messages.
-  Use this tool to help a developer or LLM generate clear, conventional commit messages that
-  communicate the intent and context of code changes, following the semantic commit format.`,
-  {}, // No parameters
-  async () => {
-    const promptPath = path.resolve(
-      __dirname,
-      "../src/llm-prompts/git-commit-instructions.md"
-    );
-    const text = fs.readFileSync(promptPath, "utf8");
-    return {
-      content: [{ type: "text", text }],
-    };
-  }
-);
 
 // Data Workflow Prompts
 server.tool(

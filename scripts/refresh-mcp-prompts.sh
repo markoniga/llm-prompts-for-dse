@@ -15,11 +15,6 @@ echo ""
 echo "📄 Checking Prompt Files:"
 echo "------------------------------------------------"
 
-# Original prompts
-RECONCILIATION_FILE="src/llm-prompts/data-reconcilitation.md"
-GIT_COMMIT_FILE="src/llm-prompts/git-commit-instructions.md"
-CODE_CHANGE_FILE="src/llm-prompts/code-change-planning-instructions.md"
-
 # Data workflow prompts
 INTERPRET_INTENT_FILE="src/llm-prompts/data-workflow/interpret_intent.prompt"
 CONTEXT_GAP_FILE="src/llm-prompts/data-workflow/context_gap.prompt"
@@ -35,9 +30,6 @@ MERGE_GUARD_FILE="src/llm-prompts/data-workflow/merge_guard.prompt"
 
 # Array of all prompt files for easier processing
 PROMPT_FILES=(
-  "$RECONCILIATION_FILE"
-  "$GIT_COMMIT_FILE"
-  "$CODE_CHANGE_FILE"
   "$INTERPRET_INTENT_FILE"
   "$CONTEXT_GAP_FILE"
   "$GENERATE_CODE_FILE"
@@ -109,9 +101,6 @@ get_md5() {
 }
 
 # Get hashes for all files
-RECONCILIATION_HASH=$(get_md5 "$RECONCILIATION_FILE")
-GIT_COMMIT_HASH=$(get_md5 "$GIT_COMMIT_FILE")
-CODE_CHANGE_HASH=$(get_md5 "$CODE_CHANGE_FILE")
 INTERPRET_INTENT_HASH=$(get_md5 "$INTERPRET_INTENT_FILE")
 CONTEXT_GAP_HASH=$(get_md5 "$CONTEXT_GAP_FILE")
 GENERATE_CODE_HASH=$(get_md5 "$GENERATE_CODE_FILE")
@@ -124,9 +113,6 @@ FIXUP_SUGGESTIONS_HASH=$(get_md5 "$FIXUP_SUGGESTIONS_FILE")
 CREATE_PR_HASH=$(get_md5 "$CREATE_PR_FILE")
 MERGE_GUARD_HASH=$(get_md5 "$MERGE_GUARD_FILE")
 
-echo "   - Reconciliation MD5: $RECONCILIATION_HASH"
-echo "   - Git Commit MD5: $GIT_COMMIT_HASH"
-echo "   - Code Change Planning MD5: $CODE_CHANGE_HASH"
 echo "   - Data Workflow Prompts MD5s:"
 echo "     - Interpret Intent: $INTERPRET_INTENT_HASH"
 echo "     - Context Gap: $CONTEXT_GAP_HASH"
@@ -171,9 +157,6 @@ get_version() {
 }
 
 # Get versions for all files
-RECONCILIATION_VERSION=$(get_version "$RECONCILIATION_FILE")
-GIT_COMMIT_VERSION=$(get_version "$GIT_COMMIT_FILE")
-CODE_CHANGE_VERSION=$(get_version "$CODE_CHANGE_FILE")
 INTERPRET_INTENT_VERSION=$(get_version "$INTERPRET_INTENT_FILE")
 CONTEXT_GAP_VERSION=$(get_version "$CONTEXT_GAP_FILE")
 GENERATE_CODE_VERSION=$(get_version "$GENERATE_CODE_FILE")
@@ -202,24 +185,6 @@ cat > "$MANIFEST_FILE" << EOF
   "version": "2.3.0",
   "last_updated": "$TIMESTAMP",
   "prompts": {
-    "data_reconciliation": {
-      "file": "$RECONCILIATION_FILE",
-      "version": "$RECONCILIATION_VERSION",
-      "hash": "$RECONCILIATION_HASH",
-      "size": $(get_file_size "$RECONCILIATION_FILE")
-    },
-    "git_commit_instructions": {
-      "file": "$GIT_COMMIT_FILE", 
-      "version": "$GIT_COMMIT_VERSION",
-      "hash": "$GIT_COMMIT_HASH",
-      "size": $(get_file_size "$GIT_COMMIT_FILE")
-    },
-    "code_change_planning": {
-      "file": "$CODE_CHANGE_FILE",
-      "version": "$CODE_CHANGE_VERSION",
-      "hash": "$CODE_CHANGE_HASH",
-      "size": $(get_file_size "$CODE_CHANGE_FILE")
-    },
     "interpret_intent": {
       "file": "$INTERPRET_INTENT_FILE",
       "version": "$INTERPRET_INTENT_VERSION",
@@ -301,7 +266,6 @@ echo "3. Verify version numbers in MCP responses match above"
 echo "4. Use file modification times to confirm latest version"
 echo ""
 echo "🔗 Reference Methods:"
-echo "   - File Path: $(pwd)/$RECONCILIATION_FILE"
 echo "   - Manifest: $(pwd)/$MANIFEST_FILE"
 echo ""
 echo "✅ MCP Refresh Complete!"
