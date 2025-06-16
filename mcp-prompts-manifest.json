@@ -1,0 +1,90 @@
+{
+  "version": "2.4.0",
+  "last_updated": "2025-06-16T21:54:46Z",
+  "prompts": {
+    "data_reconciliation": {
+      "file": "src/llm-prompts/data-reconcilitation.md",
+      "version": "2.2.0",
+      "hash": "e497c4200a1e9f91b93d30b69b0d4ef9",
+      "size":    28905
+    },
+    "git_commit_instructions": {
+      "file": "src/llm-prompts/git-commit-instructions.md", 
+      "version": "2.0.0",
+      "hash": "a7c32e0e79b1c3b78e40c003015ebd6a",
+      "size":    13132
+    },
+    "code_change_planning": {
+      "file": "src/llm-prompts/code-change-planning-instructions.md",
+      "version": "0.1.0",
+      "hash": "e9deb6d40b549878439d9b94b770f197",
+      "size":     5588
+    },
+    "interpret_intent": {
+      "file": "src/llm-prompts/data-workflow/interpret_intent.prompt",
+      "version": "0.1.0",
+      "hash": "e6e96cd8a27504a8276d6c0760094cb2",
+      "size":     9568
+    },
+    "context_gap": {
+      "file": "src/llm-prompts/data-workflow/context_gap.prompt",
+      "version": "0.1.0",
+      "hash": "31ae07e649f7b5b0a2b896877c284a33",
+      "size":    19460
+    },
+    "generate_code": {
+      "file": "src/llm-prompts/data-workflow/generate_code.prompt",
+      "version": "0.1.0",
+      "hash": "845de825b6f27269e6d08e7329ddea45",
+      "size":    24445
+    },
+    "gen_docs": {
+      "file": "src/llm-prompts/data-workflow/gen_docs.prompt",
+      "version": "0.1.0",
+      "hash": "b0bce4052788a64cd3dfe56a1f011360",
+      "size":    31567
+    },
+    "validate_risk": {
+      "file": "src/llm-prompts/data-workflow/validate_risk.prompt",
+      "version": "0.2.0",
+      "hash": "9453d2db26d533f137c5191047405665",
+      "size":    22092
+    },
+    "rollback_plan": {
+      "file": "src/llm-prompts/data-workflow/rollback_plan.prompt",
+      "version": "0.1.0",
+      "hash": "fbda2bf72f6979fac122e0bf0d8999d6",
+      "size":    32076
+    },
+    "run_dbt": {
+      "file": "src/llm-prompts/data-workflow/run_dbt.prompt",
+      "version": "0.2.0",
+      "hash": "0e56eb09c33f03deff0495d249a2cbe8",
+      "size":    27246
+    },
+    "test_results": {
+      "file": "src/llm-prompts/data-workflow/test_results.prompt",
+      "version": "0.2.0",
+      "hash": "fc2a4ee6d4035f9c661d7ddec0b26bc2",
+      "size":    34156
+    },
+    "fixup_suggestions": {
+      "file": "src/llm-prompts/data-workflow/fixup_suggestions.prompt",
+      "version": "0.1.0",
+      "hash": "ac509e420e2e361db0902f764b8fd0a3",
+      "size":    36503
+    },
+    "create_pr": {
+      "file": "src/llm-prompts/data-workflow/create_pr.prompt",
+      "version": "0.2.0",
+      "hash": "25b5df9f66657672efda909f1757a754",
+      "size":    35552
+    },
+    "merge_guard": {
+      "file": "src/llm-prompts/data-workflow/merge_guard.prompt",
+      "version": "0.2.0",
+      "hash": "4c2b0547c0fe62955a7f944f6183298e",
+      "size":    26197
+    }
+  }
+}

@@ -1,0 +1,270 @@
+# Version: v0.1.0
+# Last-Updated: 2025-06-16
+# Owner: analytics-platform
+# Description: Classify & clarify user ask
+
+# Interpret Intent Prompt
+
+## Purpose
+This prompt helps clarify user goals and classify data workflow intents. It determines whether a user is asking a question, requesting a code change, or needing documentation updates, and structures this understanding for downstream processing.
+
+## Usage
+Use this prompt as the first step in the data workflow pathway to understand what the user is asking for and how to best address their needs.
+
+## Input Context
+- User's original request or question
+- Available context about the data environment
+- User's role and typical needs
+- Project structure and conventions
+
+## Output Format
+```json
+{
+  "intent_classification": {
+    "primary_intent": "question|code_change|documentation|exploration|other",
+    "confidence": 0.0-1.0,
+    "summary": "One sentence summary of the user's intent"
+  },
+  "request_details": {
+    "subject_area": "The main subject area or domain of the request",
+    "models_referenced": ["model1", "model2"],
+    "time_scope": "historical|current|future|not_applicable",
+    "urgency": "low|medium|high|critical",
+    "complexity": "simple|moderate|complex"
+  },
+  "clarification_needed": {
+    "is_needed": true|false,
+    "questions": [
+      "Question 1 to clarify the request",
+      "Question 2 to clarify the request"
+    ],
+    "missing_context": [
+      "Type of missing context 1",
+      "Type of missing context 2"
+    ]
+  },
+  "suggested_approach": {
+    "next_steps": [
+      "Next step 1 to address the request",
+      "Next step 2 to address the request"
+    ],
+    "tools_to_use": [
+      "Tool 1 to use",
+      "Tool 2 to use"
+    ],
+    "estimated_effort": "minutes|hours|days",
+    "potential_challenges": [
+      "Challenge 1 that might arise",
+      "Challenge 2 that might arise"
+    ]
+  }
+}
+```
+
+## Instructions
+
+1. **Analyze the user's request**
+   - Identify the core ask or question
+   - Determine if they're asking for information, code changes, or documentation
+   - Look for specific models, tables, or data entities mentioned
+   - Note any time constraints or urgency indicators
+   - Consider the user's role and typical needs
+
+2. **Classify the primary intent**
+   - question: User is seeking information or explanation
+   - code_change: User wants new models, modifications to existing code, or fixes
+   - documentation: User needs documentation created or updated
+   - exploration: User wants to explore data or understand relationships
+   - other: Intent doesn't clearly fit the above categories
+
+3. **Extract key details**
+   - Identify specific models, tables, or fields referenced
+   - Determine the subject area or business domain
+   - Assess the time scope (historical analysis, current state, future planning)
+   - Gauge the complexity and urgency of the request
+
+4. **Identify missing information**
+   - Determine if clarification is needed to proceed
+   - Formulate specific questions to fill information gaps
+   - Note any missing context about data structures, business rules, etc.
+   - Consider what additional information would help address the request
+
+5. **Suggest an approach**
+   - Outline logical next steps to address the request
+   - Recommend appropriate tools or techniques
+   - Estimate the effort required
+   - Anticipate potential challenges or roadblocks
+
+6. **Provide confidence assessment**
+   - Evaluate how confident you are in your understanding
+   - Consider ambiguity or multiple possible interpretations
+   - Adjust confidence based on specificity of the request
+
+## Examples
+
+### Example 1: Question About Data Lineage
+Input: "How does customer LTV get calculated in our models? I need to understand the inputs and logic."
+
+Output:
+```json
+{
+  "intent_classification": {
+    "primary_intent": "question",
+    "confidence": 0.95,
+    "summary": "User wants to understand the calculation logic and inputs for customer LTV models"
+  },
+  "request_details": {
+    "subject_area": "Customer Lifetime Value",
+    "models_referenced": ["dim_customers", "fct_orders", "customer_ltv"],
+    "time_scope": "current",
+    "urgency": "medium",
+    "complexity": "moderate"
+  },
+  "clarification_needed": {
+    "is_needed": true,
+    "questions": [
+      "Are you interested in the technical implementation or the business logic?",
+      "Do you need this for a specific customer segment or all customers?"
+    ],
+    "missing_context": [
+      "User's familiarity with the data models",
+      "Specific use case for understanding LTV"
+    ]
+  },
+  "suggested_approach": {
+    "next_steps": [
+      "Examine the customer_ltv model and its upstream dependencies",
+      "Document the calculation steps and inputs",
+      "Provide a lineage diagram showing data flow",
+      "Explain key business rules and assumptions"
+    ],
+    "tools_to_use": [
+      "context_gap prompt to gather more information",
+      "gen_docs prompt to create documentation"
+    ],
+    "estimated_effort": "hours",
+    "potential_challenges": [
+      "LTV calculation might span multiple models with complex logic",
+      "Business rules might vary by customer segment or product"
+    ]
+  }
+}
+```
+
+### Example 2: Code Change Request
+Input: "We need to add a new field to track promotion codes in the orders model. The field should be nullable and come from the source_orders.promo_code column."
+
+Output:
+```json
+{
+  "intent_classification": {
+    "primary_intent": "code_change",
+    "confidence": 0.98,
+    "summary": "User wants to add a promotion code field to the orders model from source data"
+  },
+  "request_details": {
+    "subject_area": "Orders and Promotions",
+    "models_referenced": ["orders", "source_orders"],
+    "time_scope": "future",
+    "urgency": "medium",
+    "complexity": "simple"
+  },
+  "clarification_needed": {
+    "is_needed": true,
+    "questions": [
+      "Which specific orders model needs the change (stg_orders, fct_orders, etc.)?",
+      "Should any validation be applied to the promotion codes?",
+      "Are there downstream models that will need to reference this new field?"
+    ],
+    "missing_context": [
+      "Exact model name to modify",
+      "Data type expectations for promo_code",
+      "Testing requirements"
+    ]
+  },
+  "suggested_approach": {
+    "next_steps": [
+      "Confirm the specific model to modify",
+      "Add the promotion_code field to the model",
+      "Update schema.yml with field documentation",
+      "Add appropriate tests for the new field",
+      "Check downstream models that might need updates"
+    ],
+    "tools_to_use": [
+      "context_gap prompt to gather more information",
+      "generate_code prompt to create the model changes",
+      "validate_risk prompt to assess impact"
+    ],
+    "estimated_effort": "hours",
+    "potential_challenges": [
+      "Ensuring backward compatibility with existing queries",
+      "Handling historical data that might not have promotion codes"
+    ]
+  }
+}
+```
+
+### Example 3: Documentation Request
+Input: "The finance team is confused about our revenue recognition models. Can we create better documentation explaining how revenue is calculated and when it's recognized?"
+
+Output:
+```json
+{
+  "intent_classification": {
+    "primary_intent": "documentation",
+    "confidence": 0.9,
+    "summary": "User wants improved documentation for revenue recognition models to help the finance team"
+  },
+  "request_details": {
+    "subject_area": "Revenue Recognition",
+    "models_referenced": ["fct_revenue", "fct_transactions", "dim_dates"],
+    "time_scope": "current",
+    "urgency": "high",
+    "complexity": "moderate"
+  },
+  "clarification_needed": {
+    "is_needed": true,
+    "questions": [
+      "What specific aspects of revenue recognition are causing confusion?",
+      "Do they need technical documentation, business logic explanation, or both?",
+      "Are there specific reports or metrics they're struggling with?"
+    ],
+    "missing_context": [
+      "Specific pain points for the finance team",
+      "Current documentation status",
+      "Preferred documentation format"
+    ]
+  },
+  "suggested_approach": {
+    "next_steps": [
+      "Review existing revenue recognition models and logic",
+      "Interview finance team to understand specific confusion points",
+      "Create comprehensive documentation with examples",
+      "Include business rules and technical implementation details",
+      "Add data lineage diagrams showing how raw data becomes recognized revenue"
+    ],
+    "tools_to_use": [
+      "context_gap prompt to gather more information",
+      "gen_docs prompt to create documentation"
+    ],
+    "estimated_effort": "days",
+    "potential_challenges": [
+      "Revenue recognition rules might be complex or have many edge cases",
+      "Different stakeholders might need different levels of detail",
+      "Business logic might be implemented across multiple models"
+    ]
+  }
+}
+```
+
+## Safety Guardrails
+- Avoid making assumptions about business logic without clarification
+- Flag requests that might impact critical financial or customer data
+- Recommend appropriate testing for any code changes
+- Suggest documentation updates alongside code changes
+- Identify potential downstream impacts of changes
+- Recognize when a request might require subject matter expert input
+- Suggest breaking complex requests into manageable steps
+- Highlight potential data governance or compliance considerations
+- Recommend validation steps for any data transformations
+- Consider performance implications of suggested approaches

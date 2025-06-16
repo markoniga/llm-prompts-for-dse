@@ -1,0 +1,557 @@
+# Version: v0.1.0
+# Last-Updated: 2025-06-16
+# Owner: analytics-platform
+# Description: Open GitHub PR with template
+
+# Create PR Prompt
+
+## Purpose
+This prompt helps generate comprehensive GitHub pull requests for dbt model changes. It creates well-structured PR titles, descriptions, and metadata that follow project conventions and provide clear context for reviewers.
+
+## Usage
+Use this prompt after code changes have been tested and are ready for review, to create a pull request that effectively communicates the changes and their impact.
+
+## Input Context
+- The code changes made
+- Test results
+- Project conventions for PRs
+- Business context for the changes
+- Affected models and dependencies
+- Performance implications
+- Migration considerations
+
+## Output Format
+```json
+{
+  "pr_metadata": {
+    "title": "PR title following project conventions",
+    "branch_name": "feature/branch-name",
+    "base_branch": "main|development|other",
+    "labels": ["label1", "label2"],
+    "reviewers": ["@username1", "@username2"],
+    "priority": "low|medium|high|urgent",
+    "estimated_review_time": "10 minutes|30 minutes|1 hour|etc."
+  },
+  "pr_description": {
+    "summary": "Brief summary of the changes",
+    "motivation": "Why these changes were made",
+    "changes": [
+      {
+        "category": "Category of change (e.g., 'New Model', 'Bug Fix', 'Performance')",
+        "description": "Description of the change"
+      }
+    ],
+    "technical_details": "Technical details about the implementation",
+    "testing_approach": "How the changes were tested",
+    "test_results": "Summary of test results",
+    "performance_impact": "Impact on performance, if any",
+    "dependencies": "Dependencies on other work",
+    "migration_notes": "Notes on migration or backward compatibility",
+    "documentation_updates": "Documentation updates made or needed",
+    "screenshots": "Description of any screenshots or links to visuals"
+  },
+  "pr_checklist": [
+    {
+      "item": "Checklist item",
+      "checked": true|false,
+      "notes": "Additional notes about this item"
+    }
+  ],
+  "release_notes": {
+    "user_facing_changes": "Description of changes visible to end users",
+    "internal_changes": "Description of internal changes",
+    "breaking_changes": "Description of any breaking changes",
+    "required_actions": "Actions required by users or other teams"
+  },
+  "deployment_plan": {
+    "deployment_steps": [
+      "Step 1 of deployment",
+      "Step 2 of deployment"
+    ],
+    "rollback_plan": "Plan for rolling back if issues occur",
+    "verification_steps": [
+      "Step 1 to verify successful deployment",
+      "Step 2 to verify successful deployment"
+    ]
+  },
+  "formatted_pr_content": "The complete formatted PR description in Markdown"
+}
+```
+
+## Instructions
+
+1. **Analyze the changes**
+   - Understand the nature and scope of the changes
+   - Identify affected models and dependencies
+   - Determine the business impact
+   - Consider performance implications
+   - Identify any migration considerations
+
+2. **Create a descriptive title**
+   - Follow project conventions for PR titles
+   - Include the type of change (e.g., feat, fix, perf)
+   - Keep it concise but informative
+   - Include ticket/issue reference if applicable
+
+3. **Write a comprehensive description**
+   - Summarize the changes clearly
+   - Explain the motivation behind the changes
+   - Provide technical details about the implementation
+   - Describe how the changes were tested
+   - Include performance impact information
+   - Note any dependencies or migration considerations
+
+4. **Create a checklist**
+   - Include standard project checklist items
+   - Add specific items relevant to the changes
+   - Mark items as completed or pending
+   - Add notes for items that need explanation
+
+5. **Prepare release notes**
+   - Describe user-facing changes
+   - Document internal changes
+   - Highlight any breaking changes
+   - Specify required actions
+
+6. **Develop a deployment plan**
+   - Outline deployment steps
+   - Create a rollback plan
+   - Specify verification steps
+   - Consider timing and dependencies
+
+7. **Format the PR content**
+   - Use Markdown formatting for readability
+   - Follow project conventions for PR structure
+   - Include appropriate headings and sections
+   - Add links to relevant resources
+
+## Examples
+
+### Example 1: New Dimension Model PR
+Input: Added a new customer segmentation dimension model with tests and documentation
+
+Output:
+```json
+{
+  "pr_metadata": {
+    "title": "feat(marts): Add dim_customer_segments model",
+    "branch_name": "feature/dim-customer-segments",
+    "base_branch": "main",
+    "labels": ["new-model", "marts", "customer-data"],
+    "reviewers": ["@data-team-lead", "@customer-analytics-owner"],
+    "priority": "medium",
+    "estimated_review_time": "30 minutes"
+  },
+  "pr_description": {
+    "summary": "This PR adds a new dimension model for customer segmentation based on purchase behavior and demographics.",
+    "motivation": "The marketing team needs a standardized way to segment customers for campaign targeting and analysis. This model implements the segmentation logic approved in RFC-123.",
+    "changes": [
+      {
+        "category": "New Model",
+        "description": "Added dim_customer_segments model that classifies customers into segments based on RFM analysis and demographic data"
+      },
+      {
+        "category": "Tests",
+        "description": "Added data tests to ensure segment assignments are mutually exclusive and collectively exhaustive"
+      },
+      {
+        "category": "Documentation",
+        "description": "Added model and column descriptions explaining the segmentation methodology"
+      }
+    ],
+    "technical_details": "The model uses a combination of recency (days since last purchase), frequency (number of orders), and monetary value (average order value) to assign customers to segments. It also incorporates demographic factors like age group and location type. The segmentation logic is implemented using CASE statements with thresholds defined in the dbt_project.yml variables.",
+    "testing_approach": "Created tests to verify:\n- No customers are assigned to multiple segments\n- All customers have a segment assigned\n- Segment distributions match expected ranges\n- Referential integrity with dim_customers",
+    "test_results": "All tests are passing. Segment distribution is within expected ranges (High Value: 12%, Mid Value: 45%, Low Value: 43%).",
+    "performance_impact": "The model takes approximately 2 minutes to build and processes 1.2M customer records. It has been optimized with appropriate indexes on the customer_id field.",
+    "dependencies": "Depends on dim_customers and fct_orders models. No upstream changes required.",
+    "migration_notes": "This is a new model with no migration concerns. It can be deployed independently.",
+    "documentation_updates": "Added comprehensive documentation in the schema.yml file, including segment definitions and business rules.",
+    "screenshots": "Attached segment distribution chart in the PR comments."
+  },
+  "pr_checklist": [
+    {
+      "item": "Model follows naming conventions",
+      "checked": true,
+      "notes": ""
+    },
+    {
+      "item": "Tests added for all critical logic",
+      "checked": true,
+      "notes": "Added tests for segment exclusivity and completeness"
+    },
+    {
+      "item": "Documentation added",
+      "checked": true,
+      "notes": "Full documentation in schema.yml"
+    },
+    {
+      "item": "Performance tested",
+      "checked": true,
+      "notes": "Build time: ~2 minutes"
+    },
+    {
+      "item": "Reviewed SQL style and formatting",
+      "checked": true,
+      "notes": ""
+    },
+    {
+      "item": "Considered impact on downstream models",
+      "checked": true,
+      "notes": "No existing downstream dependencies yet"
+    }
+  ],
+  "release_notes": {
+    "user_facing_changes": "New customer segmentation dimension available for analysis in the Customer Analytics schema. Segments include High Value, Mid Value, Low Value, New Customer, and At Risk.",
+    "internal_changes": "Added dim_customer_segments model with supporting tests and documentation.",
+    "breaking_changes": "None",
+    "required_actions": "Analysts should use this model instead of ad-hoc segmentation queries. The marketing team should update their dashboards to use the new segments."
+  },
+  "deployment_plan": {
+    "deployment_steps": [
+      "Merge PR to main branch",
+      "Run dbt build --select dim_customer_segments+ in production",
+      "Verify segment distributions match expectations",
+      "Update documentation portal with new model information"
+    ],
+    "rollback_plan": "If issues are found, the model can be dropped without impact as it's new and has no downstream dependencies yet.",
+    "verification_steps": [
+      "Run dbt test --select dim_customer_segments",
+      "Verify row count matches dim_customers",
+      "Check segment distribution matches expected ranges"
+    ]
+  },
+  "formatted_pr_content": "# Add dim_customer_segments model\n\n## Summary\nThis PR adds a new dimension model for customer segmentation based on purchase behavior and demographics.\n\n## Motivation\nThe marketing team needs a standardized way to segment customers for campaign targeting and analysis. This model implements the segmentation logic approved in RFC-123.\n\n## Changes\n- **New Model**: Added dim_customer_segments model that classifies customers into segments based on RFM analysis and demographic data\n- **Tests**: Added data tests to ensure segment assignments are mutually exclusive and collectively exhaustive\n- **Documentation**: Added model and column descriptions explaining the segmentation methodology\n\n## Technical Details\nThe model uses a combination of recency (days since last purchase), frequency (number of orders), and monetary value (average order value) to assign customers to segments. It also incorporates demographic factors like age group and location type. The segmentation logic is implemented using CASE statements with thresholds defined in the dbt_project.yml variables.\n\n## Testing Approach\nCreated tests to verify:\n- No customers are assigned to multiple segments\n- All customers have a segment assigned\n- Segment distributions match expected ranges\n- Referential integrity with dim_customers\n\n## Test Results\nAll tests are passing. Segment distribution is within expected ranges (High Value: 12%, Mid Value: 45%, Low Value: 43%).\n\n## Performance Impact\nThe model takes approximately 2 minutes to build and processes 1.2M customer records. It has been optimized with appropriate indexes on the customer_id field.\n\n## Dependencies\nDepends on dim_customers and fct_orders models. No upstream changes required.\n\n## Migration Notes\nThis is a new model with no migration concerns. It can be deployed independently.\n\n## Documentation Updates\nAdded comprehensive documentation in the schema.yml file, including segment definitions and business rules.\n\n## Checklist\n- [x] Model follows naming conventions\n- [x] Tests added for all critical logic (Added tests for segment exclusivity and completeness)\n- [x] Documentation added (Full documentation in schema.yml)\n- [x] Performance tested (Build time: ~2 minutes)\n- [x] Reviewed SQL style and formatting\n- [x] Considered impact on downstream models (No existing downstream dependencies yet)\n\n## Release Notes\n\n### User-facing Changes\nNew customer segmentation dimension available for analysis in the Customer Analytics schema. Segments include High Value, Mid Value, Low Value, New Customer, and At Risk.\n\n### Internal Changes\nAdded dim_customer_segments model with supporting tests and documentation.\n\n### Breaking Changes\nNone\n\n### Required Actions\nAnalysts should use this model instead of ad-hoc segmentation queries. The marketing team should update their dashboards to use the new segments.\n\n## Deployment Plan\n\n### Deployment Steps\n1. Merge PR to main branch\n2. Run dbt build --select dim_customer_segments+ in production\n3. Verify segment distributions match expectations\n4. Update documentation portal with new model information\n\n### Rollback Plan\nIf issues are found, the model can be dropped without impact as it's new and has no downstream dependencies yet.\n\n### Verification Steps\n1. Run dbt test --select dim_customer_segments\n2. Verify row count matches dim_customers\n3. Check segment distribution matches expected ranges"
+}
+```
+
+### Example 2: Performance Optimization PR
+Input: Optimized the incremental logic in fct_transactions model to reduce build time by 70%
+
+Output:
+```json
+{
+  "pr_metadata": {
+    "title": "perf(marts): Optimize incremental logic in fct_transactions",
+    "branch_name": "perf/fct-transactions-incremental",
+    "base_branch": "main",
+    "labels": ["performance", "optimization", "core-model"],
+    "reviewers": ["@data-engineering-lead", "@performance-team"],
+    "priority": "high",
+    "estimated_review_time": "45 minutes"
+  },
+  "pr_description": {
+    "summary": "This PR optimizes the incremental logic in the fct_transactions model, reducing build time from 2+ hours to ~35 minutes.",
+    "motivation": "The fct_transactions model has been causing pipeline delays due to its long build time, which has grown as data volume increased. This optimization is critical for maintaining our SLAs for data freshness.",
+    "changes": [
+      {
+        "category": "Performance",
+        "description": "Replaced dynamic subquery in incremental predicate with static timestamp value"
+      },
+      {
+        "category": "Performance",
+        "description": "Added date-based partitioning to improve query performance"
+      },
+      {
+        "category": "Performance",
+        "description": "Optimized join structure with early filtering in CTEs"
+      },
+      {
+        "category": "Configuration",
+        "description": "Updated incremental strategy to delete+insert for better performance"
+      }
+    ],
+    "technical_details": "The key optimizations include:\n\n1. Extracting the max timestamp value before the main query and using it as a literal value in the WHERE clause, enabling better index usage\n2. Adding date-based partitioning on transaction_date to improve query performance\n3. Using CTEs to filter dimension tables before joining, reducing the amount of data processed in joins\n4. Switching to a delete+insert incremental strategy which performs better for this particular model\n\nThese changes maintain the same data output while significantly improving performance.",
+    "testing_approach": "Tested in development with:\n- Full refresh to establish baseline\n- Incremental builds with varying data volumes\n- Comparison of query plans before and after changes\n- Data integrity validation to ensure results match",
+    "test_results": "All tests pass. Performance testing shows:\n- Full refresh: 65 minutes (previously 90 minutes)\n- Incremental build: 35 minutes (previously 120+ minutes)\n- Query plan now shows proper index usage\n- Row counts and data values match between old and new implementations",
+    "performance_impact": "Build time reduced by approximately 70% for incremental builds. Resource utilization (CPU, memory) reduced by approximately 50%. These improvements will help maintain pipeline SLAs as data volume continues to grow.",
+    "dependencies": "No dependencies on other models. This change affects only the fct_transactions model itself.",
+    "migration_notes": "The first run after deployment will require a full refresh to implement partitioning. This should be scheduled during a maintenance window.",
+    "documentation_updates": "Updated model documentation to explain the incremental strategy and partitioning approach.",
+    "screenshots": "Attached performance comparison charts in PR comments showing before/after build times."
+  },
+  "pr_checklist": [
+    {
+      "item": "Performance tested in development",
+      "checked": true,
+      "notes": "Tested with various data volumes"
+    },
+    {
+      "item": "Data integrity verified",
+      "checked": true,
+      "notes": "Output matches previous implementation"
+    },
+    {
+      "item": "Query plans analyzed",
+      "checked": true,
+      "notes": "Confirmed index usage and reduced full table scans"
+    },
+    {
+      "item": "Documentation updated",
+      "checked": true,
+      "notes": "Added notes about incremental strategy and partitioning"
+    },
+    {
+      "item": "Considered impact on downstream models",
+      "checked": true,
+      "notes": "No schema changes, only performance improvements"
+    },
+    {
+      "item": "Rollback plan prepared",
+      "checked": true,
+      "notes": "Original model preserved as fct_transactions_old"
+    }
+  ],
+  "release_notes": {
+    "user_facing_changes": "Faster data refresh for transaction data. No changes to data structure or values.",
+    "internal_changes": "Optimized incremental logic in fct_transactions model to reduce build time by 70%.",
+    "breaking_changes": "None",
+    "required_actions": "The first production run will require a full refresh and should be scheduled during a maintenance window."
+  },
+  "deployment_plan": {
+    "deployment_steps": [
+      "Merge PR to main branch",
+      "Schedule a maintenance window for the full refresh",
+      "Run dbt run --select fct_transactions --full-refresh in production",
+      "Monitor the build to ensure it completes successfully",
+      "Verify data integrity with comparison queries"
+    ],
+    "rollback_plan": "If issues occur, the original model is preserved as fct_transactions_old and can be restored by reverting the changes and running a full refresh.",
+    "verification_steps": [
+      "Compare row counts between old and new implementations",
+      "Run sample analytical queries to verify results match",
+      "Check build time to confirm performance improvement",
+      "Verify downstream models build successfully"
+    ]
+  },
+  "formatted_pr_content": "# Optimize incremental logic in fct_transactions\n\n## Summary\nThis PR optimizes the incremental logic in the fct_transactions model, reducing build time from 2+ hours to ~35 minutes.\n\n## Motivation\nThe fct_transactions model has been causing pipeline delays due to its long build time, which has grown as data volume increased. This optimization is critical for maintaining our SLAs for data freshness.\n\n## Changes\n- **Performance**: Replaced dynamic subquery in incremental predicate with static timestamp value\n- **Performance**: Added date-based partitioning to improve query performance\n- **Performance**: Optimized join structure with early filtering in CTEs\n- **Configuration**: Updated incremental strategy to delete+insert for better performance\n\n## Technical Details\nThe key optimizations include:\n\n1. Extracting the max timestamp value before the main query and using it as a literal value in the WHERE clause, enabling better index usage\n2. Adding date-based partitioning on transaction_date to improve query performance\n3. Using CTEs to filter dimension tables before joining, reducing the amount of data processed in joins\n4. Switching to a delete+insert incremental strategy which performs better for this particular model\n\nThese changes maintain the same data output while significantly improving performance.\n\n## Testing Approach\nTested in development with:\n- Full refresh to establish baseline\n- Incremental builds with varying data volumes\n- Comparison of query plans before and after changes\n- Data integrity validation to ensure results match\n\n## Test Results\nAll tests pass. Performance testing shows:\n- Full refresh: 65 minutes (previously 90 minutes)\n- Incremental build: 35 minutes (previously 120+ minutes)\n- Query plan now shows proper index usage\n- Row counts and data values match between old and new implementations\n\n## Performance Impact\nBuild time reduced by approximately 70% for incremental builds. Resource utilization (CPU, memory) reduced by approximately 50%. These improvements will help maintain pipeline SLAs as data volume continues to grow.\n\n## Dependencies\nNo dependencies on other models. This change affects only the fct_transactions model itself.\n\n## Migration Notes\nThe first run after deployment will require a full refresh to implement partitioning. This should be scheduled during a maintenance window.\n\n## Documentation Updates\nUpdated model documentation to explain the incremental strategy and partitioning approach.\n\n## Checklist\n- [x] Performance tested in development (Tested with various data volumes)\n- [x] Data integrity verified (Output matches previous implementation)\n- [x] Query plans analyzed (Confirmed index usage and reduced full table scans)\n- [x] Documentation updated (Added notes about incremental strategy and partitioning)\n- [x] Considered impact on downstream models (No schema changes, only performance improvements)\n- [x] Rollback plan prepared (Original model preserved as fct_transactions_old)\n\n## Release Notes\n\n### User-facing Changes\nFaster data refresh for transaction data. No changes to data structure or values.\n\n### Internal Changes\nOptimized incremental logic in fct_transactions model to reduce build time by 70%.\n\n### Breaking Changes\nNone\n\n### Required Actions\nThe first production run will require a full refresh and should be scheduled during a maintenance window.\n\n## Deployment Plan\n\n### Deployment Steps\n1. Merge PR to main branch\n2. Schedule a maintenance window for the full refresh\n3. Run dbt run --select fct_transactions --full-refresh in production\n4. Monitor the build to ensure it completes successfully\n5. Verify data integrity with comparison queries\n\n### Rollback Plan\nIf issues occur, the original model is preserved as fct_transactions_old and can be restored by reverting the changes and running a full refresh.\n\n### Verification Steps\n1. Compare row counts between old and new implementations\n2. Run sample analytical queries to verify results match\n3. Check build time to confirm performance improvement\n4. Verify downstream models build successfully"
+}
+```
+
+### Example 3: Bug Fix PR
+Input: Fixed a critical issue with null customer IDs in fct_orders affecting customer analytics
+
+Output:
+```json
+{
+  "pr_metadata": {
+    "title": "fix(marts): Handle null customer IDs in fct_orders",
+    "branch_name": "fix/fct-orders-null-customers",
+    "base_branch": "main",
+    "labels": ["bug-fix", "data-quality", "customer-data"],
+    "reviewers": ["@data-quality-lead", "@customer-analytics-owner"],
+    "priority": "critical",
+    "estimated_review_time": "20 minutes"
+  },
+  "pr_description": {
+    "summary": "This PR fixes a critical issue where orders with null customer IDs were causing referential integrity failures and affecting customer analytics.",
+    "motivation": "Customer analytics dashboards have been showing incorrect metrics due to orders with null customer IDs being excluded from analysis. This fix ensures all orders are properly accounted for while maintaining referential integrity.",
+    "changes": [
+      {
+        "category": "Bug Fix",
+        "description": "Modified stg_orders to assign 'GUEST' customer_id to orders with null customer_ids"
+      },
+      {
+        "category": "Data Model",
+        "description": "Added a 'GUEST' customer record to dim_customers to maintain referential integrity"
+      },
+      {
+        "category": "Documentation",
+        "description": "Added documentation about the special 'GUEST' customer ID and its meaning"
+      }
+    ],
+    "technical_details": "The fix involves two main changes:\n\n1. In stg_orders.sql, added a CASE statement to replace NULL customer_ids with 'GUEST'\n2. In dim_customers.sql, added a UNION ALL to include a special 'GUEST' customer record\n\nThis approach ensures that all orders have a valid customer_id reference while preserving the distinction of guest checkout orders for analysis.",
+    "testing_approach": "Tested with:\n- Unit tests for the not_null constraint on fct_orders.customer_id\n- Referential integrity tests between fct_orders and dim_customers\n- Verification that all orders are preserved in the fact table\n- Impact analysis on customer metrics",
+    "test_results": "All tests now pass. The fix properly handles the 24 orders that previously had null customer IDs. Customer metrics now correctly include all orders.",
+    "performance_impact": "Negligible performance impact. The changes are simple transformations that do not affect query complexity or execution time.",
+    "dependencies": "Affects stg_orders and dim_customers models, which are dependencies of fct_orders.",
+    "migration_notes": "This change requires rebuilding the affected models in sequence: stg_orders, dim_customers, then fct_orders.",
+    "documentation_updates": "Added documentation in schema.yml explaining the 'GUEST' customer ID and its meaning for analytics.",
+    "screenshots": "Attached before/after screenshots of customer metrics dashboard showing the fixed numbers."
+  },
+  "pr_checklist": [
+    {
+      "item": "Root cause identified",
+      "checked": true,
+      "notes": "Guest checkout orders not properly handled"
+    },
+    {
+      "item": "Fix tested in development",
+      "checked": true,
+      "notes": "All tests pass"
+    },
+    {
+      "item": "Documentation updated",
+      "checked": true,
+      "notes": "Added notes about GUEST customer ID"
+    },
+    {
+      "item": "Impact on metrics verified",
+      "checked": true,
+      "notes": "Customer metrics now include all orders"
+    },
+    {
+      "item": "Considered impact on downstream models",
+      "checked": true,
+      "notes": "All downstream models will benefit from improved data quality"
+    }
+  ],
+  "release_notes": {
+    "user_facing_changes": "Customer analytics dashboards will now correctly include all orders, including guest checkouts. This will result in more accurate customer metrics.",
+    "internal_changes": "Modified stg_orders and dim_customers to properly handle orders with null customer IDs by assigning them to a 'GUEST' customer.",
+    "breaking_changes": "None",
+    "required_actions": "Analytics teams should be aware that customer metrics may show changes due to the inclusion of previously excluded orders."
+  },
+  "deployment_plan": {
+    "deployment_steps": [
+      "Merge PR to main branch",
+      "Run dbt run --select stg_orders dim_customers fct_orders",
+      "Run dbt test --select stg_orders dim_customers fct_orders",
+      "Verify customer metrics in dashboards"
+    ],
+    "rollback_plan": "If issues occur, revert the changes and run dbt run --select stg_orders dim_customers fct_orders to restore the previous behavior.",
+    "verification_steps": [
+      "Verify no null customer_ids in fct_orders",
+      "Verify all orders are present in fct_orders",
+      "Check customer metrics to ensure they include all orders"
+    ]
+  },
+  "formatted_pr_content": "# Handle null customer IDs in fct_orders\n\n## Summary\nThis PR fixes a critical issue where orders with null customer IDs were causing referential integrity failures and affecting customer analytics.\n\n## Motivation\nCustomer analytics dashboards have been showing incorrect metrics due to orders with null customer IDs being excluded from analysis. This fix ensures all orders are properly accounted for while maintaining referential integrity.\n\n## Changes\n- **Bug Fix**: Modified stg_orders to assign 'GUEST' customer_id to orders with null customer_ids\n- **Data Model**: Added a 'GUEST' customer record to dim_customers to maintain referential integrity\n- **Documentation**: Added documentation about the special 'GUEST' customer ID and its meaning\n\n## Technical Details\nThe fix involves two main changes:\n\n1. In stg_orders.sql, added a CASE statement to replace NULL customer_ids with 'GUEST'\n2. In dim_customers.sql, added a UNION ALL to include a special 'GUEST' customer record\n\nThis approach ensures that all orders have a valid customer_id reference while preserving the distinction of guest checkout orders for analysis.\n\n## Testing Approach\nTested with:\n- Unit tests for the not_null constraint on fct_orders.customer_id\n- Referential integrity tests between fct_orders and dim_customers\n- Verification that all orders are preserved in the fact table\n- Impact analysis on customer metrics\n\n## Test Results\nAll tests now pass. The fix properly handles the 24 orders that previously had null customer IDs. Customer metrics now correctly include all orders.\n\n## Performance Impact\nNegligible performance impact. The changes are simple transformations that do not affect query complexity or execution time.\n\n## Dependencies\nAffects stg_orders and dim_customers models, which are dependencies of fct_orders.\n\n## Migration Notes\nThis change requires rebuilding the affected models in sequence: stg_orders, dim_customers, then fct_orders.\n\n## Documentation Updates\nAdded documentation in schema.yml explaining the 'GUEST' customer ID and its meaning for analytics.\n\n## Checklist\n- [x] Root cause identified (Guest checkout orders not properly handled)\n- [x] Fix tested in development (All tests pass)\n- [x] Documentation updated (Added notes about GUEST customer ID)\n- [x] Impact on metrics verified (Customer metrics now include all orders)\n- [x] Considered impact on downstream models (All downstream models will benefit from improved data quality)\n\n## Release Notes\n\n### User-facing Changes\nCustomer analytics dashboards will now correctly include all orders, including guest checkouts. This will result in more accurate customer metrics.\n\n### Internal Changes\nModified stg_orders and dim_customers to properly handle orders with null customer IDs by assigning them to a 'GUEST' customer.\n\n### Breaking Changes\nNone\n\n### Required Actions\nAnalytics teams should be aware that customer metrics may show changes due to the inclusion of previously excluded orders.\n\n## Deployment Plan\n\n### Deployment Steps\n1. Merge PR to main branch\n2. Run dbt run --select stg_orders dim_customers fct_orders\n3. Run dbt test --select stg_orders dim_customers fct_orders\n4. Verify customer metrics in dashboards\n\n### Rollback Plan\nIf issues occur, revert the changes and run dbt run --select stg_orders dim_customers fct_orders to restore the previous behavior.\n\n### Verification Steps\n1. Verify no null customer_ids in fct_orders\n2. Verify all orders are present in fct_orders\n3. Check customer metrics to ensure they include all orders"
+}
+```
+
+## Safety Guardrails
+- Always prioritize clarity and completeness in PR descriptions
+- Include all relevant information for reviewers to understand the changes
+- Consider the impact on downstream models and processes
+- Provide clear deployment and rollback instructions
+- Include appropriate testing information and results
+- Document any special values or patterns introduced
+- Consider performance implications of changes
+- Highlight any breaking changes or required actions
+- Follow project conventions for PR structure and formatting
+- Include appropriate reviewers based on the changes made
+
+## Schema Reconciliation Documentation
+
+For PRs that modify existing data models, include schema reconciliation information:
+
+### Reconciliation Summary Section
+```markdown
+## Schema Reconciliation Results
+
+### Schema Comparison
+| Model | Changes | Impact | Risk |
+|-------|---------|--------|------|
+| model_name | +1 column, -0 columns | 1.2M rows | LOW |
+
+### Data Volume Analysis
+- Production rows: 1,234,567
+- Development rows: 1,234,570
+- Difference: +3 rows (0.0002%)
+
+### Downstream Impact
+- 2 dependent models affected
+- 1 dashboard using this data
+- 0 breaking changes detected
+```
+
+### Reconciliation Details
+Include detailed schema comparison tables for significant changes:
+
+```markdown
+## 📊 SCHEMA COMPARISON: `model_name`
+
+| Column Name | Production Type | Dev Type | Status | Impact | Rows Affected |
+|-------------|-----------------|----------|---------|---------|---------------|
+| user_id | INTEGER | INTEGER | ✅ MATCH | - | - |
+| email | VARCHAR(255) | VARCHAR(500) | ⚠️ MODIFIED | Size increased | 0 |
+| created_at | TIMESTAMP | TIMESTAMP | ✅ MATCH | - | - |
+| new_column | - | VARCHAR(100) | 🆕 ADDED | New data point | All rows |
+| old_column | VARCHAR(50) | - | 🗑️ REMOVED | Data loss risk | 1,234,567 |
+
+**Summary**: 5 columns analyzed • 1 modified • 1 added • 1 removed • ⚠️ Data loss risk
+```
+
+### Reconciliation Confirmation Checklist
+Add these items to the PR checklist:
+
+```markdown
+## Checklist
+- [x] Schema reconciliation performed
+- [x] Production vs. development comparison documented
+- [x] Data volume impact assessed
+- [x] Downstream dependencies analyzed
+- [x] Breaking changes identified and addressed
+```
+
+### Reconciliation Verification Steps
+Include verification steps in the deployment plan:
+
+```markdown
+### Verification Steps
+1. Compare row counts before and after deployment
+2. Validate data integrity across environments
+3. Verify downstream models build successfully
+4. Confirm schema changes match expectations
+```
+
+### Example PR with Reconciliation Documentation
+```markdown
+# Update fct_orders schema with new payment fields
+
+## Summary
+This PR adds new payment-related fields to the fct_orders model to support enhanced financial reporting.
+
+## Schema Reconciliation Results
+
+### Schema Comparison
+| Model | Changes | Impact | Risk |
+|-------|---------|--------|------|
+| fct_orders | +3 columns, -0 columns | 15.6M rows | MEDIUM |
+| fct_order_items | +1 column, -0 columns | 42.3M rows | LOW |
+
+### Data Volume Analysis
+- Production rows: 15,678,432
+- Development rows: 15,680,123
+- Difference: +1,691 rows (0.01%)
+
+### Downstream Impact
+- 3 dependent models affected
+- 2 dashboards using this data
+- 0 breaking changes detected
+
+## 📊 SCHEMA COMPARISON: `fct_orders`
+
+| Column Name | Production Type | Dev Type | Status | Impact | Rows Affected |
+|-------------|-----------------|----------|---------|---------|---------------|
+| order_id | VARCHAR(50) | VARCHAR(50) | ✅ MATCH | - | - |
+| payment_method | - | VARCHAR(50) | 🆕 ADDED | New data point | All rows |
+| payment_processor | - | VARCHAR(50) | 🆕 ADDED | New data point | All rows |
+| payment_status | - | VARCHAR(20) | 🆕 ADDED | New data point | All rows |
+
+**Summary**: 4 columns analyzed • 0 modified • 3 added • 0 removed • ✅ No data loss risk
+
+## Technical Details
+Added three new payment-related fields to enhance financial reporting capabilities:
+- payment_method: The method used for payment (credit_card, paypal, etc.)
+- payment_processor: The payment processor used (stripe, paypal, etc.)
+- payment_status: The current status of the payment (completed, pending, failed)
+
+## Testing Approach
+- Added not_null tests for payment_status
+- Added accepted_values tests for payment_method and payment_status
+- Verified referential integrity with dim_payment_methods
+
+## Checklist
+- [x] Schema reconciliation performed
+- [x] Production vs. development comparison documented
+- [x] Data volume impact assessed
+- [x] Downstream dependencies analyzed
+- [x] Breaking changes identified and addressed
+
+## Deployment Plan
+1. Run with reconciliation mode: `dbt run --select fct_orders --vars '{reconciliation_mode: true}'`
+2. Validate schema changes match expectations
+3. Update downstream models: `dbt run --select fct_orders+`
+4. Verify all tests pass: `dbt test --select fct_orders+`
+```

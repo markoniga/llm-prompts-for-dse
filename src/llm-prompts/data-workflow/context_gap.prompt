@@ -1,0 +1,475 @@
+# Version: v0.1.0
+# Last-Updated: 2025-06-16
+# Owner: analytics-platform
+# Description: Ask follow-up & gather schema context
+
+# Context Gap Prompt
+
+## Purpose
+This prompt helps identify missing information needed to address a data workflow request. It analyzes context gaps and gathers necessary schema information, business logic, and other relevant details to ensure a complete understanding of the task.
+
+## Usage
+Use this prompt after the initial intent has been classified to gather additional context before proceeding with code generation, documentation, or answering questions.
+
+## Input Context
+- User's original request or question
+- Intent classification from interpret_intent
+- Available information about data models and schemas
+- Project structure and conventions
+- Any previously gathered context
+
+## Output Format
+```json
+{
+  "context_assessment": {
+    "completeness": 0.0-1.0,
+    "critical_gaps": ["Gap 1", "Gap 2"],
+    "summary": "Brief summary of the context status"
+  },
+  "information_needed": {
+    "schema_details": [
+      {
+        "model_name": "model_name",
+        "fields_needed": ["field1", "field2"],
+        "relationship_details_needed": ["relationship to model X", "primary key definition"]
+      }
+    ],
+    "business_logic": [
+      "Logic rule or definition needed 1",
+      "Logic rule or definition needed 2"
+    ],
+    "technical_requirements": [
+      "Technical requirement 1",
+      "Technical requirement 2"
+    ],
+    "sample_data_needed": true|false
+  },
+  "follow_up_questions": [
+    {
+      "question": "Specific question to ask",
+      "purpose": "Why this information is needed",
+      "impact_if_missing": "What happens if we don't get this information"
+    }
+  ],
+  "suggested_queries": [
+    {
+      "purpose": "Purpose of this query",
+      "query": "SQL query to gather context",
+      "expected_insights": "What we'll learn from this query"
+    }
+  ],
+  "available_context": {
+    "models_found": [
+      {
+        "model_name": "model_name",
+        "model_type": "source|staging|intermediate|dimension|fact",
+        "key_fields": ["field1", "field2"],
+        "description": "Brief description of the model"
+      }
+    ],
+    "relevant_documentation": [
+      {
+        "doc_type": "schema|readme|comments|other",
+        "location": "Path or location of documentation",
+        "key_points": ["Important point 1", "Important point 2"]
+      }
+    ],
+    "sample_data": {
+      "available": true|false,
+      "sample_provided": "Sample data if available"
+    }
+  }
+}
+```
+
+## Instructions
+
+1. **Assess available context**
+   - Review the user's request and intent classification
+   - Identify what information is already available
+   - Determine what additional context is needed
+   - Evaluate the completeness of the current context
+
+2. **Identify schema information needs**
+   - Determine which models and fields are relevant
+   - Identify missing schema details (field types, relationships, etc.)
+   - Note any ambiguities in model or field references
+   - Consider upstream and downstream dependencies
+
+3. **Identify business logic gaps**
+   - Look for undefined business rules or calculations
+   - Note any ambiguous terminology or metrics
+   - Identify missing transformation logic
+   - Consider edge cases and exception handling
+
+4. **Formulate follow-up questions**
+   - Create specific, targeted questions to fill information gaps
+   - Explain why each piece of information is needed
+   - Prioritize questions based on criticality
+   - Frame questions to be easily answerable
+
+5. **Suggest exploratory queries**
+   - Create SQL queries to explore relevant data
+   - Design queries to validate assumptions
+   - Include queries to examine data distributions or patterns
+   - Suggest queries to check for edge cases or anomalies
+
+6. **Document available context**
+   - Summarize what is already known
+   - List relevant models and their key attributes
+   - Note any documentation that has been found
+   - Include sample data if available
+
+## Examples
+
+### Example 1: Adding a New Field to a Model
+Input: User wants to add a promotion code field to the orders model, but hasn't specified which orders model or how it should be tested.
+
+Output:
+```json
+{
+  "context_assessment": {
+    "completeness": 0.6,
+    "critical_gaps": ["Specific target model", "Field data type", "Testing requirements"],
+    "summary": "Basic intent is clear but missing technical details needed for implementation"
+  },
+  "information_needed": {
+    "schema_details": [
+      {
+        "model_name": "orders",
+        "fields_needed": ["promo_code data type", "promo_code constraints"],
+        "relationship_details_needed": ["Is there a promotions dimension table this should relate to?"]
+      }
+    ],
+    "business_logic": [
+      "How should invalid or expired promotion codes be handled?",
+      "Are there any transformations needed on the raw promo_code values?"
+    ],
+    "technical_requirements": [
+      "Which specific orders model needs the change (stg_orders, fct_orders, etc.)",
+      "Should the field be included in any unique constraints or indexes?",
+      "Are there any downstream models that reference the orders model?"
+    ],
+    "sample_data_needed": true
+  },
+  "follow_up_questions": [
+    {
+      "question": "Which specific orders model should be modified (stg_orders, int_orders, fct_orders, etc.)?",
+      "purpose": "To identify the exact model that needs the new field",
+      "impact_if_missing": "Might modify the wrong model or need to make redundant changes to multiple models"
+    },
+    {
+      "question": "What data type should the promotion_code field be, and are there any constraints (length, format, etc.)?",
+      "purpose": "To ensure the field is properly defined",
+      "impact_if_missing": "Might choose an inappropriate data type or miss important validation"
+    },
+    {
+      "question": "Is there an existing promotions table this should relate to, or is this standalone?",
+      "purpose": "To understand if referential integrity needs to be maintained",
+      "impact_if_missing": "Might miss important relationships or foreign key constraints"
+    },
+    {
+      "question": "What tests should be added for this new field?",
+      "purpose": "To ensure data quality for the new field",
+      "impact_if_missing": "Field might be added without proper validation"
+    }
+  ],
+  "suggested_queries": [
+    {
+      "purpose": "Check if promo_code exists in source data",
+      "query": "SELECT COUNT(*) as total_rows, COUNT(promo_code) as rows_with_promo FROM source_orders",
+      "expected_insights": "Confirms field exists in source and how often it's populated"
+    },
+    {
+      "purpose": "Examine promo_code patterns and length",
+      "query": "SELECT promo_code, LENGTH(promo_code) as code_length, COUNT(*) as frequency FROM source_orders WHERE promo_code IS NOT NULL GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 20",
+      "expected_insights": "Reveals common formats and lengths to inform data type decision"
+    },
+    {
+      "purpose": "Check downstream model dependencies",
+      "query": "-- This would be a dbt command rather than SQL\ndbt ls --select orders+",
+      "expected_insights": "Identifies models that might be affected by the change"
+    }
+  ],
+  "available_context": {
+    "models_found": [
+      {
+        "model_name": "source_orders",
+        "model_type": "source",
+        "key_fields": ["id", "customer_id", "order_date", "status", "promo_code"],
+        "description": "Raw orders data from the operational system"
+      },
+      {
+        "model_name": "stg_orders",
+        "model_type": "staging",
+        "key_fields": ["order_id", "customer_id", "order_date", "status"],
+        "description": "Cleaned and standardized orders data"
+      },
+      {
+        "model_name": "fct_orders",
+        "model_type": "fact",
+        "key_fields": ["order_id", "customer_id", "order_date", "status", "amount"],
+        "description": "Order fact table with metrics and dimensions"
+      }
+    ],
+    "relevant_documentation": [
+      {
+        "doc_type": "schema",
+        "location": "models/staging/schema.yml",
+        "key_points": ["stg_orders has unique and not_null tests on order_id", "No current references to promotions"]
+      },
+      {
+        "doc_type": "readme",
+        "location": "models/marts/core/README.md",
+        "key_points": ["Orders are a core entity in the data model", "No mention of promotions tracking"]
+      }
+    ],
+    "sample_data": {
+      "available": true,
+      "sample_provided": "Sample from source_orders.promo_code:\nSUMMER2025, WELCOME10, LOYALTY20, NULL, NULL, FLASH50, NULL"
+    }
+  }
+}
+```
+
+### Example 2: Understanding Revenue Recognition Logic
+Input: User wants to understand how revenue is recognized in the data models, but hasn't specified which aspects or for what purpose.
+
+Output:
+```json
+{
+  "context_assessment": {
+    "completeness": 0.4,
+    "critical_gaps": ["Specific revenue types of interest", "Time period of concern", "Purpose of the inquiry"],
+    "summary": "General topic is clear but missing specifics needed to provide a focused answer"
+  },
+  "information_needed": {
+    "schema_details": [
+      {
+        "model_name": "fct_revenue",
+        "fields_needed": ["Which specific fields are of interest"],
+        "relationship_details_needed": ["Relationship to time dimensions", "Relationship to product/service dimensions"]
+      }
+    ],
+    "business_logic": [
+      "Which revenue recognition rules are specifically of interest?",
+      "Are there specific edge cases or scenarios to focus on?",
+      "Is this about GAAP compliance, internal reporting, or something else?"
+    ],
+    "technical_requirements": [
+      "Level of technical detail needed (high-level overview vs. detailed SQL logic)",
+      "Whether historical changes to recognition logic are relevant"
+    ],
+    "sample_data_needed": false
+  },
+  "follow_up_questions": [
+    {
+      "question": "Which specific aspects of revenue recognition are you interested in (subscription revenue, one-time purchases, refunds, etc.)?",
+      "purpose": "To focus the explanation on relevant revenue types",
+      "impact_if_missing": "Might provide overly broad or irrelevant information"
+    },
+    {
+      "question": "Are you looking to understand this for reporting purposes, troubleshooting a specific issue, or something else?",
+      "purpose": "To tailor the explanation to the actual use case",
+      "impact_if_missing": "Explanation might not address the underlying need"
+    },
+    {
+      "question": "Do you need to understand the technical implementation in the data models, the business rules, or both?",
+      "purpose": "To determine the appropriate level of technical detail",
+      "impact_if_missing": "Might provide too technical or too high-level an explanation"
+    },
+    {
+      "question": "Is there a specific time period or change in recognition logic you're concerned with?",
+      "purpose": "To focus on relevant time periods or methodology changes",
+      "impact_if_missing": "Might miss important context about methodology changes"
+    }
+  ],
+  "suggested_queries": [
+    {
+      "purpose": "Identify revenue recognition models",
+      "query": "-- This would be a dbt command rather than SQL\ndbt ls --select *revenue*",
+      "expected_insights": "Maps the landscape of revenue-related models"
+    },
+    {
+      "purpose": "Examine revenue recognition logic",
+      "query": "-- Would need to look at the actual model SQL, not a query\n-- Example: cat models/marts/finance/fct_revenue.sql",
+      "expected_insights": "Reveals the transformation logic for revenue recognition"
+    },
+    {
+      "purpose": "Check revenue recognition timing",
+      "query": "SELECT event_date, recognition_date, COUNT(*), SUM(amount) FROM fct_revenue GROUP BY 1, 2 ORDER BY 1, 2 LIMIT 20",
+      "expected_insights": "Shows the typical lag between event and recognition"
+    },
+    {
+      "purpose": "Examine revenue types and their recognition patterns",
+      "query": "SELECT revenue_type, AVG(DATEDIFF(day, event_date, recognition_date)) as avg_recognition_lag, COUNT(*) FROM fct_revenue GROUP BY 1 ORDER BY 2 DESC",
+      "expected_insights": "Reveals how different revenue types are recognized at different speeds"
+    }
+  ],
+  "available_context": {
+    "models_found": [
+      {
+        "model_name": "stg_transactions",
+        "model_type": "staging",
+        "key_fields": ["transaction_id", "customer_id", "transaction_date", "amount", "transaction_type"],
+        "description": "Standardized transaction data from payment systems"
+      },
+      {
+        "model_name": "int_revenue_recognition",
+        "model_type": "intermediate",
+        "key_fields": ["transaction_id", "recognition_date", "recognized_amount"],
+        "description": "Intermediate model that applies recognition rules to transactions"
+      },
+      {
+        "model_name": "fct_revenue",
+        "model_type": "fact",
+        "key_fields": ["revenue_id", "transaction_id", "customer_id", "event_date", "recognition_date", "amount", "revenue_type"],
+        "description": "Recognized revenue with dimensions for reporting"
+      }
+    ],
+    "relevant_documentation": [
+      {
+        "doc_type": "readme",
+        "location": "models/marts/finance/README.md",
+        "key_points": ["Revenue is recognized based on service delivery date for services", "Subscription revenue is recognized over the subscription period", "One-time purchases are recognized immediately"]
+      },
+      {
+        "doc_type": "comments",
+        "location": "models/marts/finance/fct_revenue.sql",
+        "key_points": ["Complex logic for handling refunds and adjustments", "Special handling for enterprise contracts"]
+      }
+    ],
+    "sample_data": {
+      "available": false,
+      "sample_provided": null
+    }
+  }
+}
+```
+
+### Example 3: Debugging a Failed Test
+Input: User reports that the not_null test on customer_email in dim_customers is failing but doesn't know why.
+
+Output:
+```json
+{
+  "context_assessment": {
+    "completeness": 0.5,
+    "critical_gaps": ["Recent changes to the model", "Volume of failures", "Root cause of NULL values"],
+    "summary": "Basic problem is identified but missing details needed for diagnosis"
+  },
+  "information_needed": {
+    "schema_details": [
+      {
+        "model_name": "dim_customers",
+        "fields_needed": ["customer_email definition and constraints"],
+        "relationship_details_needed": ["Source of customer_email field", "Transformation logic applied"]
+      }
+    ],
+    "business_logic": [
+      "Is customer_email always required or are there valid exceptions?",
+      "Has there been a recent change in business rules around customer emails?"
+    ],
+    "technical_requirements": [
+      "When did the test start failing?",
+      "Were there recent changes to the model or upstream dependencies?",
+      "How many records are failing the test?"
+    ],
+    "sample_data_needed": true
+  },
+  "follow_up_questions": [
+    {
+      "question": "When did this test start failing? Was it after a specific code change or data load?",
+      "purpose": "To identify potential causes related to recent changes",
+      "impact_if_missing": "Might miss the connection to a specific change that introduced the issue"
+    },
+    {
+      "question": "How many records are failing the test (a few or many)?",
+      "purpose": "To understand the scope of the problem",
+      "impact_if_missing": "Might over- or under-estimate the severity of the issue"
+    },
+    {
+      "question": "Are there any patterns to the records with NULL emails (specific customer types, regions, etc.)?",
+      "purpose": "To identify potential patterns that explain the NULL values",
+      "impact_if_missing": "Might miss important clues about the root cause"
+    },
+    {
+      "question": "Should all customers have an email, or are there valid business cases for NULL emails?",
+      "purpose": "To determine if this is a data issue or a test configuration issue",
+      "impact_if_missing": "Might try to fix the data when the test should be adjusted, or vice versa"
+    }
+  ],
+  "suggested_queries": [
+    {
+      "purpose": "Quantify the test failures",
+      "query": "SELECT COUNT(*) FROM dim_customers WHERE customer_email IS NULL",
+      "expected_insights": "Reveals the volume of records failing the test"
+    },
+    {
+      "purpose": "Identify patterns in records with NULL emails",
+      "query": "SELECT customer_type, registration_source, COUNT(*) FROM dim_customers WHERE customer_email IS NULL GROUP BY 1, 2 ORDER BY 3 DESC",
+      "expected_insights": "May reveal patterns in which types of customers have NULL emails"
+    },
+    {
+      "purpose": "Check if NULL emails exist in source data",
+      "query": "SELECT COUNT(*) FROM stg_customers WHERE customer_email IS NULL",
+      "expected_insights": "Determines if NULLs are coming from source or introduced during transformation"
+    },
+    {
+      "purpose": "Check recent changes to the model",
+      "query": "-- This would be a git command rather than SQL\ngit log -p -- models/marts/core/dim_customers.sql",
+      "expected_insights": "Shows recent changes that might have affected the email field"
+    }
+  ],
+  "available_context": {
+    "models_found": [
+      {
+        "model_name": "source_customers",
+        "model_type": "source",
+        "key_fields": ["id", "email", "name", "created_at"],
+        "description": "Raw customer data from the operational database"
+      },
+      {
+        "model_name": "stg_customers",
+        "model_type": "staging",
+        "key_fields": ["customer_id", "email", "first_name", "last_name", "created_at"],
+        "description": "Standardized customer data with basic cleaning"
+      },
+      {
+        "model_name": "dim_customers",
+        "model_type": "dimension",
+        "key_fields": ["customer_id", "customer_email", "customer_name", "customer_type", "registration_source", "created_at"],
+        "description": "Customer dimension table with additional attributes"
+      }
+    ],
+    "relevant_documentation": [
+      {
+        "doc_type": "schema",
+        "location": "models/marts/core/schema.yml",
+        "key_points": ["not_null test defined on customer_email", "No recent changes to the test configuration"]
+      },
+      {
+        "doc_type": "comments",
+        "location": "models/marts/core/dim_customers.sql",
+        "key_points": ["Logic to handle multiple customer records", "No specific handling for NULL emails"]
+      }
+    ],
+    "sample_data": {
+      "available": true,
+      "sample_provided": "Sample of failing records:\ncustomer_id | customer_email | customer_type | registration_source\n12345 | NULL | guest | mobile_app\n23456 | NULL | guest | web\n34567 | NULL | guest | partner_api"
+    }
+  }
+}
+```
+
+## Safety Guardrails
+- Prioritize questions about data quality and integrity
+- Flag potential security or privacy concerns in data access
+- Recommend appropriate levels of data sampling to protect sensitive information
+- Suggest queries that avoid excessive resource usage
+- Highlight potential impacts on production systems
+- Consider compliance and governance requirements
+- Avoid making assumptions about business rules without clarification
+- Recognize when subject matter expert input is needed
+- Suggest breaking complex requests into manageable steps
+- Recommend validation steps for any assumptions
