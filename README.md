@@ -123,7 +123,7 @@ flowchart TD
 1. **Clone the repository**
 
    ```sh
-   git clone git@github.com:BrentLayne/llm-prompts.git
+   git clone git@github.com:markoniga/llm-prompts-for-dse.git
    ```
 
 2. **Install dependencies**
