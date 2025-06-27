@@ -21,7 +21,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/interpret_intent.prompt"
+      "../src/llm-prompts/data-workflow/interpret_intent.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -38,7 +38,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/context_gap.prompt"
+      "../src/llm-prompts/data-workflow/context_gap.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -55,7 +55,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/generate_code.prompt"
+      "../src/llm-prompts/data-workflow/generate_code.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -72,7 +72,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/gen_docs.prompt"
+      "../src/llm-prompts/data-workflow/gen_docs.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -89,7 +89,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/validate_risk.prompt"
+      "../src/llm-prompts/data-workflow/validate_risk.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -106,7 +106,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/rollback_plan.prompt"
+      "../src/llm-prompts/data-workflow/rollback_plan.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -123,7 +123,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/run_dbt.prompt"
+      "../src/llm-prompts/data-workflow/run_dbt.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -140,7 +140,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/test_results.prompt"
+      "../src/llm-prompts/data-workflow/test_results.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -157,7 +157,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/fixup_suggestions.prompt"
+      "../src/llm-prompts/data-workflow/fixup_suggestions.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -174,7 +174,7 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/create_pr.prompt"
+      "../src/llm-prompts/data-workflow/create_pr.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {
@@ -191,7 +191,24 @@ server.tool(
   async () => {
     const promptPath = path.resolve(
       __dirname,
-      "../src/llm-prompts/data-workflow/merge_guard.prompt"
+      "../src/llm-prompts/data-workflow/merge_guard.md"
+    );
+    const text = fs.readFileSync(promptPath, "utf8");
+    return {
+      content: [{ type: "text", text }],
+    };
+  }
+);
+
+server.tool(
+  "getTaxClientSegmentationPrompt",
+  `Returns a prompt to help convert natural-language client segment criteria into SQL queries for tax data analysis.
+  Use this tool to create compliant client segment queries with governance controls and cost management.`,
+  {}, // No parameters
+  async () => {
+    const promptPath = path.resolve(
+      __dirname,
+      "../src/llm-prompts/tax_client_segmentation.md"
     );
     const text = fs.readFileSync(promptPath, "utf8");
     return {

@@ -19,84 +19,51 @@ Use this prompt before executing potentially risky data operations to identify p
 - Execution context (development, testing, production)
 
 ## Output Format
-```json
-{
-  "risk_assessment": {
-    "risk_level": "safe|warning|danger|critical",
-    "confidence": 0.0-1.0,
-    "summary": "Brief summary of the risk assessment"
-  },
-  "identified_risks": [
-    {
-      "risk_type": "data_loss|performance|cost|security|compliance|other",
-      "severity": "low|medium|high|critical",
-      "description": "Detailed description of the risk",
-      "affected_objects": ["table1", "table2"],
-      "potential_impact": "Description of the potential impact"
-    }
-  ],
-  "operation_analysis": {
-    "operation_type": "select|insert|update|delete|create|drop|alter|merge|other",
-    "target_objects": ["table1", "table2"],
-    "estimated_rows_affected": 1000,
-    "estimated_data_volume": "10MB",
-    "execution_time_estimate": "5 minutes",
-    "resource_utilization": {
-      "cpu": "low|medium|high",
-      "memory": "low|medium|high",
-      "io": "low|medium|high",
-      "network": "low|medium|high"
-    }
-  },
-  "code_review": {
-    "problematic_patterns": [
-      {
-        "pattern": "Description of the problematic pattern",
-        "location": "Line or section where the pattern occurs",
-        "recommendation": "Suggested fix or alternative approach"
-      }
-    ],
-    "missing_safeguards": [
-      {
-        "safeguard_type": "where_clause|limit|transaction|backup|other",
-        "description": "Description of the missing safeguard",
-        "recommendation": "Suggested implementation of the safeguard"
-      }
-    ]
-  },
-  "recommendations": {
-    "proceed": true|false,
-    "suggested_approach": "Description of the suggested approach",
-    "required_safeguards": [
-      "Safeguard 1 that should be implemented",
-      "Safeguard 2 that should be implemented"
-    ],
-    "alternative_solutions": [
-      {
-        "description": "Description of an alternative solution",
-        "pros": ["Pro 1", "Pro 2"],
-        "cons": ["Con 1", "Con 2"]
-      }
-    ]
-  },
-  "execution_plan": {
-    "pre_execution_steps": [
-      "Step 1 to take before execution",
-      "Step 2 to take before execution"
-    ],
-    "monitoring_guidance": [
-      "What to monitor during execution"
-    ],
-    "rollback_plan": {
-      "rollback_possible": true|false,
-      "rollback_steps": [
-        "Step 1 to rollback the operation",
-        "Step 2 to rollback the operation"
-      ]
-    }
-  }
-}
-```
+**Use this compact Markdown format (use `render_dict_safely` macro for nested structures):**
+
+### ⚠️ Risk Assessment Summary
+| Risk | Severity | Impact | Safeguard | Status |
+|------|----------|---------|-----------|--------|
+| Data Loss | HIGH | 5M rows affected | Backup required | 🔴 CRITICAL |
+| Performance | MEDIUM | 30min execution | Off-hours scheduling | 🟡 MODERATE |
+| Cost | LOW | +$50 compute | Monitor usage | 🟢 ACCEPTABLE |
+| Compliance | HIGH | Audit trail needed | Document changes | 🔴 CRITICAL |
+| Security | MEDIUM | Sensitive data access | Access controls | 🟡 MODERATE |
+
+### 📊 Operation Analysis
+- **operation_type** → select|insert|update|delete|create|drop|alter|merge|other
+- **target_objects** → table1, table2... ({{ target_objects | length }} objects)
+- **estimated_rows_affected** → 1,000,000 rows
+- **estimated_data_volume** → 10MB
+- **execution_time_estimate** → 5 minutes
+- **resource_utilization** → CPU: high, Memory: medium, I/O: high, Network: low
+
+### 🔍 Code Review
+- **problematic_patterns** →
+  <details>
+  <summary>⚠️ <strong>Issues Found</strong> ({{ problematic_patterns | length }} patterns)</summary>
+  
+  **Pattern**: Description | **Location**: Line/section | **Fix**: Recommendation
+  
+  </details>
+- **missing_safeguards** → WHERE clause needed, LIMIT missing, Transaction recommended
+
+### 🎯 Recommendations  
+- **proceed** → true|false
+- **suggested_approach** → Brief description of recommended approach
+- **required_safeguards** → Safeguard 1, Safeguard 2... (first 2, then count)
+- **alternative_solutions** →
+  <details>
+  <summary>💡 <strong>Alternative Approaches</strong> ({{ alternatives | length }} options)</summary>
+  
+  **Option 1**: Description | **Pros**: Pro1, Pro2 | **Cons**: Con1, Con2
+  
+  </details>
+
+### 📋 Execution Plan
+- **pre_execution_steps** → Step 1, Step 2... (first 2 steps)
+- **monitoring_guidance** → Monitor transaction log, Watch for lock contention
+- **rollback_plan** → possible: true|false | Steps: Step1, Step2...
 
 ## Instructions
 
@@ -144,128 +111,50 @@ Use this prompt before executing potentially risky data operations to identify p
 Input: DELETE FROM customer_orders WHERE order_date < '2025-01-01'
 
 Output:
-```json
-{
-  "risk_assessment": {
-    "risk_level": "danger",
-    "confidence": 0.95,
-    "summary": "High-risk DELETE operation affecting a large number of rows in a critical table without proper safeguards"
-  },
-  "identified_risks": [
-    {
-      "risk_type": "data_loss",
-      "severity": "high",
-      "description": "Bulk deletion of customer order data without backup or phased approach",
-      "affected_objects": ["customer_orders"],
-      "potential_impact": "Permanent loss of historical order data, potential impact on reporting and analytics"
-    },
-    {
-      "risk_type": "performance",
-      "severity": "medium",
-      "description": "Large-scale deletion operation on a potentially large table",
-      "affected_objects": ["customer_orders"],
-      "potential_impact": "Potential lock contention, transaction log growth, and system performance degradation during execution"
-    },
-    {
-      "risk_type": "compliance",
-      "severity": "high",
-      "description": "Deletion of order data that may be required for regulatory compliance",
-      "affected_objects": ["customer_orders"],
-      "potential_impact": "Potential violation of data retention policies and regulatory requirements"
-    }
-  ],
-  "operation_analysis": {
-    "operation_type": "delete",
-    "target_objects": ["customer_orders"],
-    "estimated_rows_affected": 5000000,
-    "estimated_data_volume": "2GB",
-    "execution_time_estimate": "30-45 minutes",
-    "resource_utilization": {
-      "cpu": "high",
-      "memory": "medium",
-      "io": "high",
-      "network": "low"
-    }
-  },
-  "code_review": {
-    "problematic_patterns": [
-      {
-        "pattern": "Bulk deletion without LIMIT",
-        "location": "Entire query",
-        "recommendation": "Add a LIMIT clause or implement a batched deletion approach"
-      },
-      {
-        "pattern": "Missing transaction",
-        "location": "Entire query",
-        "recommendation": "Wrap the operation in a transaction with proper error handling"
-      }
-    ],
-    "missing_safeguards": [
-      {
-        "safeguard_type": "backup",
-        "description": "No backup of data before deletion",
-        "recommendation": "Create a backup table with the data to be deleted: CREATE TABLE customer_orders_archive AS SELECT * FROM customer_orders WHERE order_date < '2025-01-01'"
-      },
-      {
-        "safeguard_type": "limit",
-        "description": "No row limit on deletion",
-        "recommendation": "Implement a batched approach with limits: DELETE FROM customer_orders WHERE order_date < '2025-01-01' LIMIT 10000"
-      },
-      {
-        "safeguard_type": "where_clause",
-        "description": "Date-based deletion without additional constraints",
-        "recommendation": "Add additional constraints to ensure only intended data is deleted, such as status checks"
-      }
-    ]
-  },
-  "recommendations": {
-    "proceed": false,
-    "suggested_approach": "Implement a safer, batched deletion process with proper backups and verification steps",
-    "required_safeguards": [
-      "Create a backup table with the data to be deleted",
-      "Implement a batched deletion approach with appropriate limits",
-      "Add verification steps between batches",
-      "Schedule the operation during off-hours",
-      "Monitor system performance during execution"
-    ],
-    "alternative_solutions": [
-      {
-        "description": "Archive data instead of deleting it",
-        "pros": ["Preserves data for future reference", "Lower risk of data loss", "Can be reversed if needed"],
-        "cons": ["Requires additional storage space", "May not address the root issue if storage is the concern"]
-      },
-      {
-        "description": "Implement a data retention policy with proper partitioning",
-        "pros": ["More sustainable long-term solution", "Better performance for future operations", "Automated data lifecycle management"],
-        "cons": ["Requires more upfront work", "May require schema changes", "More complex implementation"]
-      }
-    ]
-  },
-  "execution_plan": {
-    "pre_execution_steps": [
-      "Create a backup table: CREATE TABLE customer_orders_archive AS SELECT * FROM customer_orders WHERE order_date < '2025-01-01'",
-      "Verify backup data: SELECT COUNT(*) FROM customer_orders_archive",
-      "Create a deletion script with batching logic",
-      "Schedule execution during off-hours",
-      "Notify stakeholders of the planned operation"
-    ],
-    "monitoring_guidance": [
-      "Monitor transaction log growth during execution",
-      "Watch for lock contention and blocking sessions",
-      "Track system performance metrics (CPU, I/O, memory)",
-      "Monitor progress of batched deletions"
-    ],
-    "rollback_plan": {
-      "rollback_possible": true,
-      "rollback_steps": [
-        "Stop the deletion process if issues arise",
-        "Restore deleted data from the backup table: INSERT INTO customer_orders SELECT * FROM customer_orders_archive",
-        "Verify data integrity after restoration"
-      ]
-    }
-  }
-}
-```
+
+### ⚠️ Risk Assessment Summary
+| Risk | Severity | Impact | Safeguard | Status |
+|------|----------|---------|-----------|--------|
+| Data Loss | HIGH | 5M rows permanent deletion | Backup required | 🔴 CRITICAL |
+| Performance | MEDIUM | 30-45min execution | Off-hours scheduling | 🟡 MODERATE |
+| Compliance | HIGH | Regulatory data retention | Document justification | 🔴 CRITICAL |
+
+### 📊 Operation Analysis
+- **operation_type** → delete
+- **target_objects** → customer_orders (1 object)
+- **estimated_rows_affected** → 5,000,000 rows
+- **estimated_data_volume** → 2GB
+- **execution_time_estimate** → 30-45 minutes
+- **resource_utilization** → CPU: high, Memory: medium, I/O: high, Network: low
+
+### 🔍 Code Review
+- **problematic_patterns** →
+  <details>
+  <summary>⚠️ <strong>Issues Found</strong> (2 patterns)</summary>
+  
+  **Bulk deletion without LIMIT** | **Location**: Entire query | **Fix**: Add LIMIT clause or implement batched deletion approach
+  **Missing transaction** | **Location**: Entire query | **Fix**: Wrap operation in transaction with proper error handling
+  
+  </details>
+- **missing_safeguards** → Backup needed, Row limit missing, Additional WHERE constraints recommended
+
+### 🎯 Recommendations  
+- **proceed** → false
+- **suggested_approach** → Implement safer, batched deletion process with proper backups and verification steps
+- **required_safeguards** → Create backup table, Implement batched approach...and 3 more
+- **alternative_solutions** →
+  <details>
+  <summary>💡 <strong>Alternative Approaches</strong> (2 options)</summary>
+  
+  **Archive data instead** | **Pros**: Preserves data, Lower risk, Reversible | **Cons**: Additional storage, May not address root issue
+  **Data retention policy** | **Pros**: Sustainable long-term, Better performance, Automated lifecycle | **Cons**: More upfront work, Schema changes needed
+  
+  </details>
+
+### 📋 Execution Plan
+- **pre_execution_steps** → Create backup table, Verify backup data...and 3 more
+- **monitoring_guidance** → Monitor transaction log growth, Watch for lock contention, Track system performance
+- **rollback_plan** → possible: true | Steps: Stop deletion process, Restore from backup, Verify data integrity
 
 ### Example 2: Medium-Risk Model Change
 Input: Modify fct_orders model to use a full refresh instead of incremental updates

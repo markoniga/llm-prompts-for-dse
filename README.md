@@ -6,7 +6,11 @@ A repository of LLM prompts that can be served over MCP to your LLM. Write once,
 
 - A collection of useful LLM prompts for data science and engineering workflows
 - Complete data workflow prompt pathway for analytics engineering tasks
-- Schema reconciliation features for safe data operations
+- **Compact Markdown output format** - De-noised JSON with collapsible details sections
+- **Auto-publish path** - Automated PR creation and merge workflow after successful reconciliation
+- **User approval checkpoints** - Built-in confirmation steps for quality control
+- Schema reconciliation features for safe data operations with 5-row risk summary tables
+- **Macro style guardrails** - Enforced <300 LOC, 2-space indent, Jinja lint requirements
 - LLM prompts served via MCP (Model Context Protocol)
 - Easily extendable for additional LLM prompts
 - Built with TypeScript and the official MCP SDK
@@ -56,10 +60,11 @@ Once configured, you can use these prompts in your conversations:
 
 #### **Data Workflow Examples**
 - *"Use the interpret_intent prompt to help me understand what kind of dbt model I need for customer lifetime value analysis"*
-- *"Apply the generate_code prompt to create a dbt model that calculates monthly recurring revenue"*
+- *"Apply the generate_code prompt to create a dbt model that calculates monthly recurring revenue"*  
 - *"Use the validate_risk prompt to assess the impact of adding a new column to our users table"*
-- *"Apply the test_results prompt to help me understand why my dbt tests are failing"*
-- *"Use the create_pr prompt to generate a pull request description for this new analytics model"*
+- *"Apply the reconcile prompt to automatically run dbt build and reconcile with Preset"*
+- *"Use the test_results prompt to help me understand why my dbt tests are failing"*
+- *"Apply the create_pr prompt to generate a pull request description for this new analytics model"*
 
 ---
 
@@ -78,13 +83,22 @@ flowchart TD
     V -->|needs confirm| CF{{"Proceed?"}}
     CF -- yes --> R
     CF -- no --> ABORT[[Abort]]
-    R --> T(test_results.prompt)
+    R -->|build success| RC(reconcile.prompt)
+    RC -->|🟢 all green| PR(create_pr.prompt)
+    RC -->|🟡 warnings| CF2{{"Review & Proceed?"}}
+    RC -->|🔴 issues| FIX[Manual fix required]
+    CF2 -- yes --> PR
+    CF2 -- no --> ABORT
+    R -->|build failure| T(test_results.prompt)
     T -->|fail| FX(fixup_suggestions.prompt)
-    T -->|pass| PR(create_pr.prompt)
     PR --> M(merge_guard.prompt)
     M --> DONE[Code merged ✅]
     subgraph rollbacks
         V -->|high risk detected| RB(rollback_plan.prompt)
+    end
+    subgraph "Auto-Publish Path"
+        RC -.->|auto-chain| PR
+        PR -.->|auto-chain| M
     end
 ```
 
@@ -140,6 +154,11 @@ flowchart TD
 
 - **Description:** Returns a prompt to help execute dbt commands safely and efficiently. Use this tool to get guidance on running models, tests, and other dbt operations in a controlled manner, including schema reconciliation execution steps.
 - **Returns:** The full contents of [`run_dbt.prompt`](./src/llm-prompts/data-workflow/run_dbt.prompt)
+
+#### `getReconcilePrompt`
+
+- **Description:** Returns a prompt to automate local dbt build and Preset reconciliation workflow. Runs `dbt build --select {{ models }}`, validates build success, executes Preset MCP reconciliation, and summarizes differences in a clear Markdown table format. Chains to auto-publish path when all systems are green.
+- **Returns:** The full contents of [`reconcile.prompt`](./src/llm-prompts/data-workflow/reconcile.prompt)
 
 #### `getTestResultsPrompt`
 

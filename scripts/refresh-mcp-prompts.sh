@@ -16,17 +16,18 @@ echo "📄 Checking Prompt Files:"
 echo "------------------------------------------------"
 
 # Data workflow prompts
-INTERPRET_INTENT_FILE="src/llm-prompts/data-workflow/interpret_intent.prompt"
-CONTEXT_GAP_FILE="src/llm-prompts/data-workflow/context_gap.prompt"
-GENERATE_CODE_FILE="src/llm-prompts/data-workflow/generate_code.prompt"
-GEN_DOCS_FILE="src/llm-prompts/data-workflow/gen_docs.prompt"
-VALIDATE_RISK_FILE="src/llm-prompts/data-workflow/validate_risk.prompt"
-ROLLBACK_PLAN_FILE="src/llm-prompts/data-workflow/rollback_plan.prompt"
-RUN_DBT_FILE="src/llm-prompts/data-workflow/run_dbt.prompt"
-TEST_RESULTS_FILE="src/llm-prompts/data-workflow/test_results.prompt"
-FIXUP_SUGGESTIONS_FILE="src/llm-prompts/data-workflow/fixup_suggestions.prompt"
-CREATE_PR_FILE="src/llm-prompts/data-workflow/create_pr.prompt"
-MERGE_GUARD_FILE="src/llm-prompts/data-workflow/merge_guard.prompt"
+INTERPRET_INTENT_FILE="src/llm-prompts/data-workflow/interpret_intent.md"
+CONTEXT_GAP_FILE="src/llm-prompts/data-workflow/context_gap.md"
+GENERATE_CODE_FILE="src/llm-prompts/data-workflow/generate_code.md"
+GEN_DOCS_FILE="src/llm-prompts/data-workflow/gen_docs.md"
+VALIDATE_RISK_FILE="src/llm-prompts/data-workflow/validate_risk.md"
+ROLLBACK_PLAN_FILE="src/llm-prompts/data-workflow/rollback_plan.md"
+RUN_DBT_FILE="src/llm-prompts/data-workflow/run_dbt.md"
+TEST_RESULTS_FILE="src/llm-prompts/data-workflow/test_results.md"
+FIXUP_SUGGESTIONS_FILE="src/llm-prompts/data-workflow/fixup_suggestions.md"
+CREATE_PR_FILE="src/llm-prompts/data-workflow/create_pr.md"
+MERGE_GUARD_FILE="src/llm-prompts/data-workflow/merge_guard.md"
+TAX_CLIENT_SEGMENTATION_FILE="src/llm-prompts/tax_client_segmentation.md"
 
 # Array of all prompt files for easier processing
 PROMPT_FILES=(
@@ -41,6 +42,7 @@ PROMPT_FILES=(
   "$FIXUP_SUGGESTIONS_FILE"
   "$CREATE_PR_FILE"
   "$MERGE_GUARD_FILE"
+  "$TAX_CLIENT_SEGMENTATION_FILE"
 )
 
 # Check each file
@@ -112,6 +114,7 @@ TEST_RESULTS_HASH=$(get_md5 "$TEST_RESULTS_FILE")
 FIXUP_SUGGESTIONS_HASH=$(get_md5 "$FIXUP_SUGGESTIONS_FILE")
 CREATE_PR_HASH=$(get_md5 "$CREATE_PR_FILE")
 MERGE_GUARD_HASH=$(get_md5 "$MERGE_GUARD_FILE")
+TAX_CLIENT_SEGMENTATION_HASH=$(get_md5 "$TAX_CLIENT_SEGMENTATION_FILE")
 
 echo "   - Data Workflow Prompts MD5s:"
 echo "     - Interpret Intent: $INTERPRET_INTENT_HASH"
@@ -125,6 +128,7 @@ echo "     - Test Results: $TEST_RESULTS_HASH"
 echo "     - Fixup Suggestions: $FIXUP_SUGGESTIONS_HASH"
 echo "     - Create PR: $CREATE_PR_HASH"
 echo "     - Merge Guard: $MERGE_GUARD_HASH"
+echo "     - Tax Client Segmentation: $TAX_CLIENT_SEGMENTATION_HASH"
 
 # Strategy 3: Create/update manifest file with dynamic version extraction
 echo "3. Creating MCP manifest file..."
@@ -147,7 +151,7 @@ get_version() {
   fi
   
   # Try # Version: format (prompt files)
-  version=$(grep -E "^# Version:" "$file" 2>/dev/null | sed 's/.*: *\([0-9.]*\).*/\1/' 2>/dev/null)
+  version=$(grep -E "^# Version:" "$file" 2>/dev/null | sed 's/.*: *v*\([0-9.]*\).*/\1/' 2>/dev/null)
   if [ -n "$version" ]; then
     echo "$version"
     return
@@ -168,6 +172,7 @@ TEST_RESULTS_VERSION=$(get_version "$TEST_RESULTS_FILE")
 FIXUP_SUGGESTIONS_VERSION=$(get_version "$FIXUP_SUGGESTIONS_FILE")
 CREATE_PR_VERSION=$(get_version "$CREATE_PR_FILE")
 MERGE_GUARD_VERSION=$(get_version "$MERGE_GUARD_FILE")
+TAX_CLIENT_SEGMENTATION_VERSION=$(get_version "$TAX_CLIENT_SEGMENTATION_FILE")
 
 # Function to get file size
 get_file_size() {
@@ -250,6 +255,12 @@ cat > "$MANIFEST_FILE" << EOF
       "version": "$MERGE_GUARD_VERSION",
       "hash": "$MERGE_GUARD_HASH",
       "size": $(get_file_size "$MERGE_GUARD_FILE")
+    },
+    "tax_client_segmentation": {
+      "file": "$TAX_CLIENT_SEGMENTATION_FILE",
+      "version": "$TAX_CLIENT_SEGMENTATION_VERSION",
+      "hash": "$TAX_CLIENT_SEGMENTATION_HASH",
+      "size": $(get_file_size "$TAX_CLIENT_SEGMENTATION_FILE")
     }
   }
 }

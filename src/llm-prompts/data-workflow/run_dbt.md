@@ -741,6 +741,35 @@ Output:
 }
 ```
 
+## POST-EXECUTION RECONCILIATION
+
+### Automatic Preset Reconciliation Chain
+**After successful dbt build completion, automatically trigger reconciliation:**
+
+```bash
+# Step 1: Successful dbt build
+dbt build --select {{ models }}
+
+# Step 2: If build passes, chain to reconciliation
+# Execute getReconcilePrompt with the same {{ models }}
+```
+
+**Reconciliation Workflow:**
+1. ✅ **Build Success** → Proceed to reconciliation
+2. 🔄 **Execute Reconciliation** → `getReconcilePrompt(models={{ models }})`
+3. 📊 **Generate Diff Summary** → Markdown table format
+4. 🎯 **Determine Next Action** → Deploy, review, or fix
+
+**Integration Logic:**
+- **Success**: Chain immediately to `getReconcilePrompt`
+- **Warnings**: Include warning context in reconciliation call
+- **Failure**: Skip reconciliation, focus on error resolution
+
+**Expected Output After Reconciliation Chain:**
+> 🚀 **dbt build completed successfully**  
+> 🔄 **Initiating Preset reconciliation...**  
+> 📊 **Reconciliation results ready for review**
+
 ## Safety Guardrails
 - Always recommend testing changes in development before production
 - Suggest phased approaches for complex operations
