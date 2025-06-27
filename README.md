@@ -66,6 +66,13 @@ Once configured, you can use these prompts in your conversations:
 - *"Use the test_results prompt to help me understand why my dbt tests are failing"*
 - *"Apply the create_pr prompt to generate a pull request description for this new analytics model"*
 
+#### **Advanced Workflow Examples**
+- **Auto-publish path**: After successful reconciliation, automatically chains to PR creation with customizable titles
+- **Legacy system refactoring**: Example workflows for modernizing systems like money-movement, inventory, or customer data pipelines
+- **Macro guardrails**: Enforced <300 LOC per macro, 2-space indentation, required doc-blocks (`/** Purpose, Args, Returns, Example */`)
+- **Test chain**: `getRunDbtPrompt` → `getRunTestsPrompt` → `getReconcilePrompt` → auto-PR creation
+- **Style compliance**: All code validated with `dbt deps && dbt compile` before commit
+
 ---
 
 ## 📊 Data Workflow Pathway
@@ -83,13 +90,15 @@ flowchart TD
     V -->|needs confirm| CF{{"Proceed?"}}
     CF -- yes --> R
     CF -- no --> ABORT[[Abort]]
-    R -->|build success| RC(reconcile.prompt)
+    R -->|build success| RT(run_tests.prompt)
+    RT -->|tests pass| RC(reconcile.prompt)
     RC -->|🟢 all green| PR(create_pr.prompt)
     RC -->|🟡 warnings| CF2{{"Review & Proceed?"}}
     RC -->|🔴 issues| FIX[Manual fix required]
     CF2 -- yes --> PR
     CF2 -- no --> ABORT
     R -->|build failure| T(test_results.prompt)
+    RT -->|tests fail| T
     T -->|fail| FX(fixup_suggestions.prompt)
     PR --> M(merge_guard.prompt)
     M --> DONE[Code merged ✅]
@@ -154,6 +163,11 @@ flowchart TD
 
 - **Description:** Returns a prompt to help execute dbt commands safely and efficiently. Use this tool to get guidance on running models, tests, and other dbt operations in a controlled manner, including schema reconciliation execution steps.
 - **Returns:** The full contents of [`run_dbt.prompt`](./src/llm-prompts/data-workflow/run_dbt.prompt)
+
+#### `getRunTestsPrompt`
+
+- **Description:** Returns a prompt to execute dbt build and pytest validation tests. Runs `dbt build --select {{ models }}` then `pytest tests/prompt_formatting` to ensure comprehensive validation of both data models and prompt formatting.
+- **Returns:** The full contents of [`run_tests.prompt`](./src/llm-prompts/data-workflow/run_tests.prompt)
 
 #### `getReconcilePrompt`
 
