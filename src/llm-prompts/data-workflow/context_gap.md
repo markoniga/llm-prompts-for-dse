@@ -272,6 +272,11 @@ This prompt helps identify missing information needed to address a data workflow
 - Flag potential security/privacy concerns with sample data
 - Consider downstream impacts of any changes
 
+## USER APPROVAL CHECKPOINT
+**After providing your analysis above, always end with:**
+
+> Here's my analysis. If this looks right, respond **Proceed**; otherwise clarify.
+
 ## CHANGELOG
 ### v0.1.0 - 2025-06-16
 - Initial version with context gap analysis
