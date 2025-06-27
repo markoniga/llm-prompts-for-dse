@@ -46,6 +46,16 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 - Validation queries
 
 ## MANDATORY OUTPUT FORMAT
+
+### 🚫 NO LARGE CODE BLOCKS IN CHAT
+**CRITICAL: If generated code > 40 lines → write to file instead of pasting**
+
+**For large code blocks (>40 lines):**
+1. Use `cursor.write_file(file_path, content)` to write code to file
+2. Use `cursor.show_diff(file_path)` to preview changes
+3. Reply with: "✅ Code written to `{file_path}` - {brief_summary}"
+
+**For small code blocks (≤40 lines):**
 **ALWAYS return this exact JSON structure:**
 ```json
 {
@@ -71,7 +81,7 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
     ]
   },
   "code": {
-    "content": "The full content of the generated code",
+    "content": "The full content of the generated code (ONLY if ≤40 lines)",
     "highlights": [
       {
         "line_numbers": "Line number or range",

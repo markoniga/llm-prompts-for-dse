@@ -18,17 +18,19 @@ Use this prompt before executing potentially risky data operations to identify p
 - Business criticality of the data
 - Execution context (development, testing, production)
 
-## Output Format
-**Use this compact Markdown format (use `render_dict_safely` macro for nested structures):**
+## MANDATORY OUTPUT FORMAT
+**CRITICAL: Always use this exact compact Markdown table format - NEVER use verbose JSON:**
 
 ### ⚠️ Risk Assessment Summary
-| Risk | Severity | Impact | Safeguard | Status |
-|------|----------|---------|-----------|--------|
-| Data Loss | HIGH | 5M rows affected | Backup required | 🔴 CRITICAL |
-| Performance | MEDIUM | 30min execution | Off-hours scheduling | 🟡 MODERATE |
-| Cost | LOW | +$50 compute | Monitor usage | 🟢 ACCEPTABLE |
-| Compliance | HIGH | Audit trail needed | Document changes | 🔴 CRITICAL |
-| Security | MEDIUM | Sensitive data access | Access controls | 🟡 MODERATE |
+| Risk | Severity | Safeguard | Owner | Status |
+|------|----------|-----------|-------|--------|
+| Data Loss | HIGH | Backup required | Data Eng | 🔴 CRITICAL |
+| Performance | MEDIUM | Off-hours scheduling | DevOps | 🟡 MODERATE |
+| Cost | LOW | Monitor usage | Analytics | 🟢 ACCEPTABLE |
+| Compliance | HIGH | Document changes | Governance | 🔴 CRITICAL |
+| Security | MEDIUM | Access controls | Security | 🟡 MODERATE |
+
+**Maximum 5 rows in risk table - prioritize most critical risks only**
 
 ### 📊 Operation Analysis
 - **operation_type** → select|insert|update|delete|create|drop|alter|merge|other
@@ -160,187 +162,24 @@ Output:
 Input: Modify fct_orders model to use a full refresh instead of incremental updates
 
 Output:
-```json
-{
-  "risk_assessment": {
-    "risk_level": "warning",
-    "confidence": 0.85,
-    "summary": "Medium-risk change to a critical model's materialization strategy that could impact performance and downstream dependencies"
-  },
-  "identified_risks": [
-    {
-      "risk_type": "performance",
-      "severity": "medium",
-      "description": "Switching from incremental to full refresh will significantly increase build time and resource usage",
-      "affected_objects": ["fct_orders"],
-      "potential_impact": "Longer build times, increased resource consumption, potential pipeline delays"
-    },
-    {
-      "risk_type": "cost",
-      "severity": "medium",
-      "description": "Full refresh will scan and process all historical data on every run",
-      "affected_objects": ["fct_orders"],
-      "potential_impact": "Increased compute costs, especially as data volume grows over time"
-    },
-    {
-      "risk_type": "data_loss",
-      "severity": "low",
-      "description": "Temporary unavailability of the model during rebuild",
-      "affected_objects": ["fct_orders", "downstream_model_1", "downstream_model_2"],
-      "potential_impact": "Brief reporting gaps during model rebuilding"
-    }
-  ],
-  "operation_analysis": {
-    "operation_type": "alter",
-    "target_objects": ["fct_orders"],
-    "estimated_rows_affected": 50000000,
-    "estimated_data_volume": "15GB",
-    "execution_time_estimate": "20-30 minutes",
-    "resource_utilization": {
-      "cpu": "high",
-      "memory": "high",
-      "io": "high",
-      "network": "medium"
-    }
-  },
-  "code_review": {
-    "problematic_patterns": [
-      {
-        "pattern": "Removal of incremental logic",
-        "location": "Model configuration",
-        "recommendation": "Consider keeping incremental logic but addressing specific issues instead of switching to full refresh"
-      }
-    ],
-    "missing_safeguards": [
-      {
-        "safeguard_type": "testing",
-        "description": "No validation of data consistency between incremental and full refresh approaches",
-        "recommendation": "Add tests to compare results between incremental and full refresh to ensure consistency"
-      },
-      {
-        "safeguard_type": "scheduling",
-        "description": "No consideration of execution timing",
-        "recommendation": "Schedule the initial full refresh during off-hours to minimize impact"
-      }
-    ]
-  },
-  "recommendations": {
-    "proceed": true,
-    "suggested_approach": "Proceed with caution, implementing additional safeguards and monitoring",
-    "required_safeguards": [
-      "Schedule the initial full refresh during off-hours",
-      "Add data validation tests to compare results",
-      "Monitor build time and resource usage",
-      "Notify downstream consumers of potential brief data unavailability"
-    ],
-    "alternative_solutions": [
-      {
-        "description": "Fix incremental logic instead of switching to full refresh",
-        "pros": ["Maintains better performance", "Lower resource usage", "Faster builds as data grows"],
-        "cons": ["May require more complex code changes", "Could take longer to implement correctly"]
-      },
-      {
-        "description": "Implement a hybrid approach with periodic full refreshes",
-        "pros": ["Balances performance and data consistency", "Provides regular data validation", "More sustainable long-term"],
-        "cons": ["More complex implementation", "Requires scheduling logic"]
-      }
-    ]
-  },
-  "execution_plan": {
-    "pre_execution_steps": [
-      "Create a backup of the current model configuration",
-      "Add data validation tests to compare results",
-      "Schedule the change during off-hours",
-      "Notify stakeholders of the planned change"
-    ],
-    "monitoring_guidance": [
-      "Monitor build time and resource usage during execution",
-      "Check for data consistency issues after the change",
-      "Watch for impacts on downstream models",
-      "Track overall pipeline performance"
-    ],
-    "rollback_plan": {
-      "rollback_possible": true,
-      "rollback_steps": [
-        "Revert to the previous incremental configuration if issues arise",
-        "Run the incremental build to catch up with any new data",
-        "Verify data consistency after rollback"
-      ]
-    }
-  }
-}
-```
+
+### ⚠️ Risk Assessment Summary
+| Risk | Severity | Safeguard | Owner | Status |
+|------|----------|-----------|-------|--------|
+| Performance | HIGH | Off-hours scheduling | DevOps | 🔴 CRITICAL |
+| Cost | MEDIUM | Monitor usage + alerts | Analytics | 🟡 MODERATE |
+| Availability | MEDIUM | Notify stakeholders | Data Eng | 🟡 MODERATE |
+| Data Consistency | LOW | Validation tests | Data Eng | 🟢 ACCEPTABLE |
 
 ### Example 3: Low-Risk SELECT Query
 Input: SELECT customer_id, SUM(order_total) FROM fct_orders WHERE order_date >= '2025-01-01' GROUP BY customer_id
 
 Output:
-```json
-{
-  "risk_assessment": {
-    "risk_level": "safe",
-    "confidence": 0.95,
-    "summary": "Low-risk read-only query with appropriate filtering and aggregation"
-  },
-  "identified_risks": [
-    {
-      "risk_type": "performance",
-      "severity": "low",
-      "description": "Query involves aggregation across potentially large dataset",
-      "affected_objects": ["fct_orders"],
-      "potential_impact": "Moderate resource usage, but unlikely to cause significant issues"
-    }
-  ],
-  "operation_analysis": {
-    "operation_type": "select",
-    "target_objects": ["fct_orders"],
-    "estimated_rows_affected": 0,
-    "estimated_data_volume": "5GB scanned, 10MB returned",
-    "execution_time_estimate": "30-60 seconds",
-    "resource_utilization": {
-      "cpu": "medium",
-      "memory": "medium",
-      "io": "medium",
-      "network": "low"
-    }
-  },
-  "code_review": {
-    "problematic_patterns": [],
-    "missing_safeguards": [
-      {
-        "safeguard_type": "limit",
-        "description": "No row limit on results",
-        "recommendation": "Consider adding a LIMIT clause if exploring data interactively"
-      }
-    ]
-  },
-  "recommendations": {
-    "proceed": true,
-    "suggested_approach": "Proceed as is, the query is safe to execute",
-    "required_safeguards": [],
-    "alternative_solutions": [
-      {
-        "description": "Use a materialized view or pre-aggregated table for repeated analysis",
-        "pros": ["Better performance for repeated queries", "Reduced load on source table"],
-        "cons": ["Requires additional setup", "May not be worth it for one-time analysis"]
-      }
-    ]
-  },
-  "execution_plan": {
-    "pre_execution_steps": [],
-    "monitoring_guidance": [
-      "Monitor query execution time if run during peak hours",
-      "Consider adding a LIMIT clause if exploring data interactively"
-    ],
-    "rollback_plan": {
-      "rollback_possible": true,
-      "rollback_steps": [
-        "Cancel query if it runs longer than expected"
-      ]
-    }
-  }
-}
-```
+
+### ⚠️ Risk Assessment Summary
+| Risk | Severity | Safeguard | Owner | Status |
+|------|----------|-----------|-------|--------|
+| Performance | LOW | Monitor during peak hours | Analytics | 🟢 ACCEPTABLE |
 
 ## Safety Guardrails
 - Always prioritize data integrity and safety over performance or convenience
