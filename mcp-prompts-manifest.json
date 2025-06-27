@@ -1,24 +1,24 @@
 {
   "version": "2.3.0",
-  "last_updated": "2025-06-26T21:16:31Z",
+  "last_updated": "2025-06-27T15:39:53Z",
   "prompts": {
     "interpret_intent": {
       "file": "src/llm-prompts/data-workflow/interpret_intent.md",
       "version": "0.1.0",
-      "hash": "4d5504a2facb2a78bbf7a9c283bf5f86",
-      "size":    11374
+      "hash": "2deef992b326185ab20bd197b3892304",
+      "size":    10660
     },
     "context_gap": {
       "file": "src/llm-prompts/data-workflow/context_gap.md",
       "version": "0.1.0",
-      "hash": "16de9fe03e670bd0d7761d77b9b98a72",
-      "size":    13718
+      "hash": "2853cad4fe960923895b3072a5b35bcf",
+      "size":    11701
     },
     "generate_code": {
       "file": "src/llm-prompts/data-workflow/generate_code.md",
       "version": "0.1.0",
-      "hash": "551046a335d50cd6aa66ed5d280de394",
-      "size":    14570
+      "hash": "c6fcd7b4a1b5efc74475ac55c81f38f0",
+      "size":    15737
     },
     "gen_docs": {
       "file": "src/llm-prompts/data-workflow/gen_docs.md",
@@ -29,8 +29,8 @@
     "validate_risk": {
       "file": "src/llm-prompts/data-workflow/validate_risk.md",
       "version": "0.1.0",
-      "hash": "9453d2db26d533f137c5191047405665",
-      "size":    22092
+      "hash": "8a04abf1b595822ecfba4169d7e9b814",
+      "size":    19077
     },
     "rollback_plan": {
       "file": "src/llm-prompts/data-workflow/rollback_plan.md",
@@ -41,8 +41,14 @@
     "run_dbt": {
       "file": "src/llm-prompts/data-workflow/run_dbt.md",
       "version": "0.1.0",
-      "hash": "0e56eb09c33f03deff0495d249a2cbe8",
-      "size":    27246
+      "hash": "111b90f4c2b5ca6e8f97aba376b68adc",
+      "size":    28276
+    },
+    "reconcile": {
+      "file": "src/llm-prompts/data-workflow/reconcile.md",
+      "version": "0.1.0",
+      "hash": "fb64c296614e95a2264142cb4b217921",
+      "size":     9445
     },
     "test_results": {
       "file": "src/llm-prompts/data-workflow/test_results.md",
@@ -59,8 +65,8 @@
     "create_pr": {
       "file": "src/llm-prompts/data-workflow/create_pr.md",
       "version": "0.1.0",
-      "hash": "25b5df9f66657672efda909f1757a754",
-      "size":    35552
+      "hash": "f5b9776c0736b5bc70f12ace30b90578",
+      "size":    36999
     },
     "merge_guard": {
       "file": "src/llm-prompts/data-workflow/merge_guard.md",

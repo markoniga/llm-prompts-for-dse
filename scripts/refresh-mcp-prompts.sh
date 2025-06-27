@@ -23,6 +23,7 @@ GEN_DOCS_FILE="src/llm-prompts/data-workflow/gen_docs.md"
 VALIDATE_RISK_FILE="src/llm-prompts/data-workflow/validate_risk.md"
 ROLLBACK_PLAN_FILE="src/llm-prompts/data-workflow/rollback_plan.md"
 RUN_DBT_FILE="src/llm-prompts/data-workflow/run_dbt.md"
+RECONCILE_FILE="src/llm-prompts/data-workflow/reconcile.md"
 TEST_RESULTS_FILE="src/llm-prompts/data-workflow/test_results.md"
 FIXUP_SUGGESTIONS_FILE="src/llm-prompts/data-workflow/fixup_suggestions.md"
 CREATE_PR_FILE="src/llm-prompts/data-workflow/create_pr.md"
@@ -38,6 +39,7 @@ PROMPT_FILES=(
   "$VALIDATE_RISK_FILE"
   "$ROLLBACK_PLAN_FILE"
   "$RUN_DBT_FILE"
+  "$RECONCILE_FILE"
   "$TEST_RESULTS_FILE"
   "$FIXUP_SUGGESTIONS_FILE"
   "$CREATE_PR_FILE"
@@ -110,6 +112,7 @@ GEN_DOCS_HASH=$(get_md5 "$GEN_DOCS_FILE")
 VALIDATE_RISK_HASH=$(get_md5 "$VALIDATE_RISK_FILE")
 ROLLBACK_PLAN_HASH=$(get_md5 "$ROLLBACK_PLAN_FILE")
 RUN_DBT_HASH=$(get_md5 "$RUN_DBT_FILE")
+RECONCILE_HASH=$(get_md5 "$RECONCILE_FILE")
 TEST_RESULTS_HASH=$(get_md5 "$TEST_RESULTS_FILE")
 FIXUP_SUGGESTIONS_HASH=$(get_md5 "$FIXUP_SUGGESTIONS_FILE")
 CREATE_PR_HASH=$(get_md5 "$CREATE_PR_FILE")
@@ -124,6 +127,7 @@ echo "     - Generate Docs: $GEN_DOCS_HASH"
 echo "     - Validate Risk: $VALIDATE_RISK_HASH"
 echo "     - Rollback Plan: $ROLLBACK_PLAN_HASH"
 echo "     - Run DBT: $RUN_DBT_HASH"
+echo "     - Reconcile: $RECONCILE_HASH"
 echo "     - Test Results: $TEST_RESULTS_HASH"
 echo "     - Fixup Suggestions: $FIXUP_SUGGESTIONS_HASH"
 echo "     - Create PR: $CREATE_PR_HASH"
@@ -168,6 +172,7 @@ GEN_DOCS_VERSION=$(get_version "$GEN_DOCS_FILE")
 VALIDATE_RISK_VERSION=$(get_version "$VALIDATE_RISK_FILE")
 ROLLBACK_PLAN_VERSION=$(get_version "$ROLLBACK_PLAN_FILE")
 RUN_DBT_VERSION=$(get_version "$RUN_DBT_FILE")
+RECONCILE_VERSION=$(get_version "$RECONCILE_FILE")
 TEST_RESULTS_VERSION=$(get_version "$TEST_RESULTS_FILE")
 FIXUP_SUGGESTIONS_VERSION=$(get_version "$FIXUP_SUGGESTIONS_FILE")
 CREATE_PR_VERSION=$(get_version "$CREATE_PR_FILE")
@@ -231,6 +236,12 @@ cat > "$MANIFEST_FILE" << EOF
       "version": "$RUN_DBT_VERSION",
       "hash": "$RUN_DBT_HASH",
       "size": $(get_file_size "$RUN_DBT_FILE")
+    },
+    "reconcile": {
+      "file": "$RECONCILE_FILE",
+      "version": "$RECONCILE_VERSION",
+      "hash": "$RECONCILE_HASH",
+      "size": $(get_file_size "$RECONCILE_FILE")
     },
     "test_results": {
       "file": "$TEST_RESULTS_FILE",

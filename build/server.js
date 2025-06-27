@@ -73,6 +73,15 @@ async () => {
         content: [{ type: "text", text }],
     };
 });
+server.tool("getReconcilePrompt", `Returns a prompt to automate local dbt build and Preset reconciliation workflow.
+  Runs dbt build --select {{ models }}, validates build success, executes Preset MCP reconciliation, and summarizes differences in a clear Markdown table format.`, {}, // No parameters
+async () => {
+    const promptPath = path.resolve(__dirname, "../src/llm-prompts/data-workflow/reconcile.md");
+    const text = fs.readFileSync(promptPath, "utf8");
+    return {
+        content: [{ type: "text", text }],
+    };
+});
 server.tool("getTestResultsPrompt", `Returns a prompt to analyze and interpret dbt test results.
   Use this tool to understand test outcomes, prioritize fixes, and make data quality decisions.`, {}, // No parameters
 async () => {
