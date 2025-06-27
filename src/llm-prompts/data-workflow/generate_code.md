@@ -22,9 +22,10 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 ## DATA-VAULT REPOSITORY CONTEXT
 **🏗️ Working in the data-vault environment:**
 - **Schema Naming**: Use `dev_{DEV_SQL_SCHEMA_PREFIX}` for development (e.g., `dev_moniga`)
-- **Testing Strategy**: Leverage `./dbt/test_all_changes` for git-based testing
-- **YAML Generation**: Use `./dbt/dbt_yaml_gen --select model_name` for schema files
-- **Development Pattern**: Create views from prod tables via `--rebuild` for faster iteration
+- **Testing Strategy**: Git-based with `git diff --name-only --diff-filter=d origin/main...` then `docker compose run dbt build --select changed_models+`
+- **YAML Generation**: `docker compose run dbt run-operation generate_model_yaml --args '{"model_names": ["model_name"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
+- **Development Pattern**: Create views from prod via `run-operation create_views_from_prod_tables --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table"]}'`
+- **Docker Execution**: All dbt commands via `docker compose run dbt --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
 
 ## EXECUTION WORKFLOW
 

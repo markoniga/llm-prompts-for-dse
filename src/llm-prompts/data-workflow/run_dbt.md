@@ -22,38 +22,90 @@ This prompt helps execute dbt commands safely and efficiently in the **data-vaul
 - **Production Schemas**: Domain-based (`marketing`, `finance`, `tax`, `trade`, etc.)
 - **Prep Tables**: Use `_backroom` suffix (`marketing_backroom`, `tax_backroom`)
 
-### **Data-Vault dbt Wrapper Scripts (use these instead of raw dbt)**
+### **Data-Vault dbt Command Patterns (use these exact patterns)**
 ```bash
-# Main dbt wrapper with rebuild, notifications, dependency management
-./dbt/dbt --select model_name --rebuild
+# Main dbt execution with Docker (always use docker compose)
+docker compose run dbt build --select model_name --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
 
-# Git-based testing of changed models + their children  
-./dbt/test_all_changes --build-only
+# With rebuild (creates views from prod tables for dependencies)
+docker compose run dbt run-operation create_views_from_prod_tables --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table"]}'
 
-# Rebuild just upstream dependencies as views
-./dbt/rebuild --select model_name
+# Git-based testing (test changed models + children)
+git diff --name-only --diff-filter=d origin/main... | grep "projects/wealthsimple/"
+docker compose run dbt build --select changed_models+ --full-refresh --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
 
-# Generate YAML schema files for models
-./dbt/dbt_yaml_gen --select model_name
+# Generate YAML schema for models
+docker compose run dbt run-operation generate_model_yaml --args '{"model_names": ["model_name"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+
+# Clean up existing dev views before rebuild
+docker compose run dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
 ```
 
 ### **Default Behaviors You Should Know**
-- **Date Variable**: `ds` automatically defaults to yesterday's date if not specified
-- **User Confirmation**: You'll be prompted if >10 models are selected (suggests using rebuild)
-- **Dependency Management**: Auto-runs `dbt deps` if modules are missing
-- **Notifications**: macOS notifications alert when jobs complete/fail
-- **Incremental Models**: Handled separately with special logic
+- **Date Variable**: `ds` automatically defaults to yesterday's date: `--vars '{"ds": "YYYY-MM-DD"}'`
+- **User Confirmation**: If >10 models selected, prompt: "Your model selection will build X models. Continue with y/n (suggests using rebuild)"
+- **Dependency Management**: Auto-runs `dbt deps` if `projects/wealthsimple/dbt_modules` missing
+- **SSH Tunneling**: Requires VPN + `ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}`
+- **Notifications**: macOS notifications via osascript - ✅ "DBT Done!", ⚠️ "DBT Model Error!", ‼️ "DBT Failed!"
+- **Incremental Models**: Run separately with `--full-refresh` first, then normal incremental build
+- **Container Cleanup**: Always run `docker compose down --remove-orphans` after execution
 
 ### **Key dbt Operations Available**
 - **`create_views_from_prod_tables`**: Creates dev views from production tables (faster development)
+  ```bash
+  docker compose run dbt run-operation create_views_from_prod_tables --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table1", "schema.table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  ```
 - **`drop_existing_views_in_dev_schema`**: Cleans up existing dev views
+  ```bash
+  docker compose run dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  ```
 - **`generate_model_yaml`**: Auto-generates YAML schema files
+  ```bash
+  docker compose run dbt run-operation generate_model_yaml --args '{"model_names": ["model1", "model2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  ```
+
+### **Git-Based Model Detection Patterns**
+```bash
+# Get changed files from git diff
+git diff --name-only --diff-filter=d origin/main...
+
+# Filter for wealthsimple project files
+git diff --name-only --diff-filter=d origin/main... | grep "projects/wealthsimple/"
+
+# Get dbt node keys from manifest for changed files (requires manifest parsing)
+# Changed files need to be matched against manifest['nodes'][node_key]['original_file_path']
+
+# Build changed models plus children (downstream dependencies)
+docker compose run dbt build --select changed_model1 changed_model2+ --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+
+# Handle incremental models separately (run with --full-refresh first)
+docker compose run dbt build --select incremental_models --full-refresh --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+```
+
+### **Environment Setup and Dependency Management**
+```bash
+# SSH tunnel establishment (required before any dbt commands)
+ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}
+
+# Check and install dependencies if missing
+if [ ! -d "projects/wealthsimple/dbt_modules" ] || [ -z "$(ls -A projects/wealthsimple/dbt_modules)" ]; then
+  docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+fi
+
+# Cleanup after execution
+docker compose down --remove-orphans
+
+# Close SSH tunnel when done
+ssh -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -O exit ${SSH_USER}@${JUMPBOX_HOST_PROD}
+```
 
 ### **Recommended Development Workflow**
-1. **Use `./dbt/test_all_changes`** for testing changes (git diff-based)
-2. **Use `--rebuild` flag** when dependencies are stale
-3. **Use `--row-limit`** for faster development with limited data
-4. **Use git-based selection** to automatically test what you've changed
+1. **Git-based testing**: `git diff --name-only --diff-filter=d origin/main...` then build changed models + children
+2. **Rebuild when dependencies stale**: Use `create_views_from_prod_tables` operation to create dev views
+3. **Row limiting for dev**: Add `--vars '{"source_limit": 1000}'` for faster development
+4. **Model threshold check**: If selecting >10 models, use rebuild strategy instead of full build
+5. **Schema validation**: Check for missing schema configs in `dbt_project.yml`
+6. **Incremental handling**: Always build incremental models separately after regular models
 
 ## Usage
 Use this prompt when you need to run dbt commands as part of a data workflow, particularly after code changes have been validated and are ready for execution **in the data-vault environment**.

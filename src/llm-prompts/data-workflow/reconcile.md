@@ -10,11 +10,13 @@ This prompt automates local dbt build and Preset reconciliation workflow **in th
 
 ## DATA-VAULT REPOSITORY CONTEXT
 **🏗️ Working in the data-vault environment:**
-- **Use data-vault dbt wrappers**: `./dbt/dbt --select {{ models }} --rebuild` instead of raw dbt
-- **Schema Context**: Your changes are in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema  
-- **Git-based Testing**: Consider using `./dbt/test_all_changes` for comprehensive testing
-- **Docker Execution**: All dbt commands run via `docker compose run dbt`
-- **Environment**: Requires VPN + SSH tunnels to production systems
+- **Docker Execution**: All dbt commands via `docker compose run dbt --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
+- **Schema Context**: Your changes are in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema (e.g., `dev_moniga`)
+- **Git-based Testing**: Use `git diff --name-only --diff-filter=d origin/main...` to find changed models, then build with `+` selector
+- **Rebuild Pattern**: Use `run-operation create_views_from_prod_tables` with `{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table"]}`
+- **Environment**: Requires VPN + SSH tunnels: `ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON}`
+- **Notifications**: macOS alerts via osascript for completion status
+- **Container Cleanup**: Always run `docker compose down --remove-orphans` after execution
 
 ## CURSOR AGENT EXECUTION GUIDE
 **Use this prompt AFTER successful code generation** to validate changes and reconcile with production systems using data-vault workflow patterns.
@@ -35,16 +37,28 @@ This prompt automates local dbt build and Preset reconciliation workflow **in th
 - Build directory has sufficient space
 
 ### Step 2: Execute dbt Build
-**Command pattern:**
+**Command pattern (data-vault environment):**
 ```bash
-dbt build --select {{ models }}
+# Check if SSH tunnel is active
+ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}
+
+# Auto-install dependencies if missing
+docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+
+# Build with data-vault patterns
+docker compose run dbt build --select {{ models }} --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
+
+# Clean up containers
+docker compose down --remove-orphans
 ```
 
 **Success criteria:**
+- SSH tunnel established successfully
 - All models compile without errors
 - All tests pass
 - No critical warnings
 - Build completes within reasonable time
+- macOS notification confirms completion
 
 ### Step 3: Generate and Execute Reconciliation Queries
 **Build reconciliation queries in chat first, then execute via Preset MCP:**

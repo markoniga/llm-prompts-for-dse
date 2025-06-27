@@ -6,10 +6,18 @@
 # Run Tests Prompt
 
 ## PURPOSE
-This prompt runs `dbt build --select {{ models }}` followed by `pytest tests/prompt_formatting` to ensure both data models and prompt formatting are validated. It provides comprehensive testing workflow with clear success/failure reporting.
+This prompt runs `dbt build --select {{ models }}` followed by `pytest tests/prompt_formatting` to ensure both data models and prompt formatting are validated **in the data-vault repository environment**. It provides comprehensive testing workflow with clear success/failure reporting using data-vault patterns.
+
+## DATA-VAULT REPOSITORY CONTEXT
+**🏗️ Testing in the data-vault environment:**
+- **Docker Execution**: All dbt commands via `docker compose run dbt --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
+- **Git-based Testing**: Leverage `git diff --name-only --diff-filter=d origin/main...` to identify changed models for targeted testing
+- **Incremental Handling**: Test incremental models separately with `--full-refresh` then normal build
+- **Environment Setup**: Requires VPN + SSH tunnels before execution
+- **Container Cleanup**: Always run `docker compose down --remove-orphans` after testing
 
 ## CURSOR AGENT EXECUTION GUIDE
-**Use this prompt AFTER code generation** to validate both dbt models and prompt formatting before reconciliation.
+**Use this prompt AFTER code generation** to validate both dbt models and prompt formatting before reconciliation **using data-vault testing patterns**.
 
 ### Pre-Execution Checklist
 - [ ] Target models are clearly identified
@@ -20,16 +28,28 @@ This prompt runs `dbt build --select {{ models }}` followed by `pytest tests/pro
 ## EXECUTION WORKFLOW
 
 ### Step 1: Execute dbt Build
-**Command pattern:**
+**Command pattern (data-vault environment):**
 ```bash
-dbt build --select {{ models }}
+# Establish SSH tunnel first
+ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}
+
+# Install dependencies if missing
+docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+
+# Execute build with data-vault patterns
+docker compose run dbt build --select {{ models }} --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
+
+# Clean up containers
+docker compose down --remove-orphans
 ```
 
 **This command will:**
-- Compile and run the selected models
+- Establish required SSH tunnel to production
+- Compile and run the selected models in Docker container
 - Execute all associated tests
 - Validate data quality and integrity
 - Check for any schema issues
+- Clean up Docker resources
 
 ### Step 2: Execute pytest Validation
 **Command pattern:**
