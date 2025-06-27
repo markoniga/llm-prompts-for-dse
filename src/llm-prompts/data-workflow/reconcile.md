@@ -162,8 +162,8 @@ dbt build --select {{ models }} --profiles-dir ~/.dbt
 - Execution time per model
 - Any warnings or errors
 
-### Step 4: Execute Reconciliation via Preset MCP
-**CRITICAL: Follow Preset MCP Query Guidelines**
+### Step 4: Execute Reconciliation via Preset MCP (Database ID = 3)
+**CRITICAL: Follow Preset MCP Query Guidelines - Always use database_id=3**
 
 **Schema Usage Rules:**
 - **Production**: Use domain schema directly (e.g., `marketing`, `finance`, `tax`, `trade`)
@@ -175,12 +175,9 @@ dbt build --select {{ models }} --profiles-dir ~/.dbt
 **NEVER query information_schema or system tables for schema discovery**
 
 **Schema Discovery Method (when needed):**
-```sql
--- Query Used:
--- Discover actual schemas and tables being used in practice
-SELECT *
-FROM preset.audit_logs
-WHERE entity_type='urn:preset:ws:sqllab'
+```
+# Execute via Preset MCP (always use database_id=3)
+mcp.preset.query(database_id=3, sql="SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab'")
 ```
 This shows real SQL queries in the `details` column, revealing actual schema.table_name patterns like:
 - `money_movement.fct_deposits`

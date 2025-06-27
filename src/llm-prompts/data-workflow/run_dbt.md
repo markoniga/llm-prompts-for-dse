@@ -139,7 +139,7 @@ Use this prompt when you need to run dbt commands as part of a data workflow, pa
    - Suggest notifications to stakeholders
    - Plan for downstream processes
 
-## Preset MCP Query Guidelines
+## Preset MCP Query Guidelines (Database ID = 3)
 
 When generating queries for Preset MCP, follow these critical rules:
 
@@ -176,12 +176,9 @@ When generating queries for Preset MCP, follow these critical rules:
    - **Primary method**: Find schema and table information within the data-vault repository
    - **Secondary method**: Use `dbt_project.yml` file as the authoritative source for available schemas
    - **Practical discovery**: Query actual usage patterns when needed:
-     ```sql
-     -- Query Used:
-     -- Discover real schemas and tables being used
-     SELECT *
-     FROM preset.audit_logs
-     WHERE entity_type='urn:preset:ws:sqllab'
+     ```
+     # Execute via Preset MCP (always use database_id=3)
+     mcp.preset.query(database_id=3, sql="SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab'")
      ```
      This reveals actual schema.table_name patterns from the `details` column in real SQL queries
 
