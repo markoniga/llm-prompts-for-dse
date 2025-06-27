@@ -278,7 +278,7 @@ This prompt helps identify missing information needed to address a data workflow
 ## USER APPROVAL CHECKPOINT
 **After providing your analysis above, always end with:**
 
-> Here's my analysis. If this looks right, respond **Proceed**; otherwise clarify.
+> Here's the draft plan. Respond **Proceed** to continue or **Revise** to change course.
 
 ## CHANGELOG
 ### v0.1.0 - 2025-06-16

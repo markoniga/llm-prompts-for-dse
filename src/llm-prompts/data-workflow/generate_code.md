@@ -159,9 +159,10 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
     ]
   },
   "next_steps": [
-    "Step 1 to implement this code",
-    "Step 2 to test and validate",
-    "Step 3 to deploy and monitor"
+    "Run 'dbt deps && dbt compile' to validate code compiles successfully", 
+    "Execute all tests to ensure data quality and integrity",
+    "Update documentation and schema.yml files",
+    "Deploy to development environment and validate with sample data"
   ]
 }
 ```
@@ -172,11 +173,21 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 **Mandatory Requirements for all dbt macros:**
 - **<300 LOC per macro** - Break large macros into smaller, focused components
 - **2-space indentation** - Consistent with project standards  
+- **Lint with `dbt deps && dbt compile`** - All code must pass compilation before commit
+- **Top-of-file doc-block required** - `/** Purpose, Args, Returns, Example */`
 - **Jinja lint passes** - All Jinja code must pass linting checks
 
 **Macro Quality Standards:**
 ```jinja2
--- ✅ CORRECT: Clean, concise macro under 300 LOC
+-- ✅ CORRECT: Clean, concise macro under 300 LOC with required doc-block
+/**
+ * Purpose: Calculate customer lifetime metrics including order count and total value
+ * Args: 
+ *   - customer_table: Table containing customer data
+ *   - orders_table: Table containing order transactions  
+ * Returns: SQL query string with customer_id, total_orders, lifetime_value
+ * Example: {{ calculate_customer_metrics('dim_customers', 'fct_orders') }}
+ */
 {% macro calculate_customer_metrics(customer_table, orders_table) %}
   
   {% if execute %}
@@ -460,7 +471,7 @@ models:
 ## USER APPROVAL CHECKPOINT
 **After providing your code generation analysis above, always end with:**
 
-> Here's my analysis. If this looks right, respond **Proceed**; otherwise clarify.
+> Here's the draft plan. Respond **Proceed** to continue or **Revise** to change course.
 
 ## CHANGELOG
 ### v0.1.0 - 2025-06-16
