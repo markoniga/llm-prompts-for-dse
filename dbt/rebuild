@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+
+from datetime import datetime, timedelta
+
+from dbt_helpers import rebuild, _remove_orphaned_containers
+
+
+DBT_HOME = '/usr/local/data-vault'
+ENV = os.environ.copy()
+
+parser = argparse.ArgumentParser(description='Rebuild upstream dependencies for DBT models.')
+parser.add_argument('--profiles-dir', default=f'{DBT_HOME}/profiles', help='Will supply the specified profile.')
+parser.add_argument('--project-dir', default='wealthsimple', help='Will supply the specified project.')
+parser.add_argument('--vars', default=str({"ds": f"{(datetime.now() - timedelta(1)).strftime('%Y-%m-%d')}"}), help='Will supply the specified vars.')
+parser.add_argument('--select', nargs='+', required=True, help='Your model or path to rebuild for.')
+
+try:
+    proc = subprocess.run(f"ssh -M -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -fnNT -L {ENV['LOCAL_FORWARD_PANTHEON']} {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise Exception('Unable to establish tunnel. Please connect to VPN.')
+
+    args, unargs = parser.parse_known_args()
+    select_stmt = ' '.join(args.select)
+
+    if args.project_dir:
+        project_dir = f'{DBT_HOME}/projects/{args.project_dir}'
+
+        if not os.path.isdir(f'{os.getcwd()}/projects/{args.project_dir}/dbt_modules'):
+            subprocess.run(f'docker compose run dbt deps --project-dir={project_dir} --profiles-dir={args.profiles_dir}', shell=True)
+
+    dbt_vars = json.dumps(args.vars)
+
+    manifest_path = f'{os.getcwd()}/projects/{args.project_dir}/target/'
+    rebuild(args.select, project_dir, args.profiles_dir, manifest_path, dbt_vars)
+    _remove_orphaned_containers()
+except Exception as e:
+    sys.exit(e)
+
+if proc.returncode == 0:
+    subprocess.run(f"ssh -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -O exit {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+
+sys.exit(0)

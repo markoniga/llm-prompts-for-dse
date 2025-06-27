@@ -1,0 +1,183 @@
+#!/usr/bin/env python
+import argparse
+import os
+import subprocess
+import sys
+from ast import literal_eval
+from datetime import datetime, timedelta
+from dbt_helpers import (
+    _get_manifest, _get_next_materalized_child,
+    _get_next_materialized_parent, _get_node_schema_table, _run_rebuild,
+    _get_node_name, _get_incremental_models,
+    _get_failed_models_from_previous_run,
+    _get_list_of_missing_schema_configs, _drop_existing_views,
+    COMPLETION_PING, _remove_orphaned_containers
+    )
+
+DBT_HOME = '/usr/local/data-vault'
+ENV = os.environ.copy()
+
+def _get_git_diff():
+    git_diff = 'git diff --name-only --diff-filter=d origin/main...'
+    altered_files = subprocess.run(git_diff, shell=True, stdout=subprocess.PIPE)
+    print(f'\nAltered files:\n{altered_files.stdout.decode("utf-8")}')
+    return altered_files.stdout.decode('utf-8').rstrip('\n').split('\n')
+
+def _get_dbt_node_keys_from_git_diff(manifest, project_dir='wealthsimple'):
+    git_diff_array = _get_git_diff()
+    dbt_node_keys = []
+    project_path_prefix = f'projects/{project_dir}/'
+    for altered_file in git_diff_array:
+        if project_path_prefix in altered_file:
+            node_path = altered_file.replace(project_path_prefix, '')
+            for node_key, node_value in manifest['nodes'].items():
+                if node_value['original_file_path'] == node_path:
+                    if node_value['resource_type'] in ['model', 'seed', 'view', 'snapshot']:
+                        dbt_node_keys.append(node_key)
+    return dbt_node_keys
+
+
+# Argparse
+parser = argparse.ArgumentParser(description='Rebuild DBT project.')
+parser.add_argument('--profiles-dir', default=f'{DBT_HOME}/profiles', help='Will supply the specified profile.')
+parser.add_argument('--project-dir', default='wealthsimple', help='Will supply the specified project.')
+parser.add_argument('--vars', default=str({"ds": f"{(datetime.now() - timedelta(1)).strftime('%Y-%m-%d')}"}), help='Will supply the specified vars.')
+parser.add_argument('--exclude', '--names-list', nargs='+', default=[], help='Models to exclude from run.')
+parser.add_argument('--include', nargs='+', default=[], help='Models to include in run.')
+parser.add_argument('--build-only', action=argparse.BooleanOptionalAction)
+parser.add_argument('--skip-rebuild', action=argparse.BooleanOptionalAction)
+parser.add_argument('--skip-prev-success', action=argparse.BooleanOptionalAction)
+parser.add_argument('--row-limit', default=None, help='Add a LIMIT clause to your prod views.')
+
+try:
+    proc = subprocess.run(f"ssh -M -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -fnNT -L {ENV['LOCAL_FORWARD_PANTHEON']} {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise Exception('Unable to establish tunnel. Please connect to VPN.')
+
+    args, unargs = parser.parse_known_args()
+
+    project_dir = f'{DBT_HOME}/projects/{args.project_dir}'
+    profiles_dir = args.profiles_dir
+    select = 'prep.common'
+
+    dbt_vars_dict = literal_eval(args.vars)
+    if args.row_limit:
+        dbt_vars_dict['source_limit'] = int(args.row_limit)
+    dbt_vars = '"' + f"{dbt_vars_dict}" + '"'
+
+    target_path = f'{os.getcwd()}/projects/{args.project_dir}/target'
+
+    # if deps are missing we install them
+    if not os.path.isdir(f'{os.getcwd()}/projects/{args.project_dir}/dbt_modules'):
+        subprocess.run(f'docker compose run dbt deps --project-dir={project_dir} --profiles-dir={args.profiles_dir}', shell=True)
+
+    if args.skip_prev_success:
+        manifest = _get_manifest(target_path, compile=False, project_dir=project_dir, profiles_dir=profiles_dir, dbt_vars=dbt_vars)
+        print('\nGetting list of failed models/tests in last run...\n')
+        set_of_nodes_to_test_ids = _get_failed_models_from_previous_run(target_path, manifest)
+        if not set_of_nodes_to_test_ids:
+            print('\nNo failed models found in previous run...\n')
+            sys.exit(0)
+        
+        exclude_stmt = ''
+        if args.exclude:
+            exclude_stmt = f'--exclude {" ".join(args.exclude)}'
+            print(f'\nExclude flag:\n {exclude_stmt}')
+
+    else:
+        # compile your project and get the current manifest file
+        manifest = _get_manifest(target_path, compile=True, project_dir=project_dir, profiles_dir=profiles_dir, dbt_vars=dbt_vars)
+
+        print('\nGetting changed nodes from git diff + manifest...\n')
+        node_diffs = _get_dbt_node_keys_from_git_diff(manifest, args.project_dir)
+        if args.include:
+            node_diffs.extend(args.include)
+        print('\nChanged nodes:\n')
+        print(node_diffs)
+
+        print('\nGetting child models from changed models set...\n')
+        children_nodes = []
+        if args.build_only:
+            children_nodes = node_diffs
+        else:
+            for changed_node in node_diffs:
+                children_nodes.append(changed_node)
+                children = _get_next_materalized_child(manifest, changed_node)
+                children_nodes.extend(children)
+            print(f'\nChild nodes:\n {set(children_nodes)}')
+
+        if not args.skip_rebuild:
+            print('\nGetting parent models from changed models set + child models set...\n')
+            parents = []
+            for child in children_nodes:
+                parent = _get_next_materialized_parent(manifest, child)
+                parents.extend(parent)
+            print(f'\nParent nodes:\n {set(parents)}')
+
+            rebuild_nodes = set([_get_node_schema_table(manifest, node) for node in parents if node not in node_diffs])
+            if rebuild_nodes:
+                print('\nRunning rebuild for all parent models...\n')
+                print(args.row_limit)
+                _run_rebuild(rebuild_nodes, profiles_dir, project_dir, dbt_vars, args.row_limit)
+                print('\nRebuild complete...\n')
+
+        exclude_stmt = ''
+
+        if args.exclude:
+            exclude_stmt = f'--exclude {" ".join(args.exclude)}'
+            print(f'\nExclude flag:\n {exclude_stmt}')
+        set_of_nodes_to_test_ids = children_nodes + node_diffs
+
+    incremental_models = _get_incremental_models(set_of_nodes_to_test_ids, manifest)
+
+    set_of_nodes_to_test = [_get_node_name(manifest, node) for node in set_of_nodes_to_test_ids]
+    set_of_nodes_to_test_incremental = [_get_node_name(manifest, node) for node in incremental_models]
+
+    nodes_to_test_str = ' '.join(set_of_nodes_to_test)
+    nodes_to_test_str_incr = ' '.join(set_of_nodes_to_test_incremental)
+
+    other_args = ' '.join(unargs)
+
+    nodes_missing_schema_config = _get_list_of_missing_schema_configs(set_of_nodes_to_test_ids, manifest)
+
+    # Check for existing views to drop
+    _drop_existing_views(set_of_nodes_to_test, profiles_dir, project_dir, dbt_vars)
+
+    if args.build_only:
+        print('\nRunning dbt build for models in git diff...\n')
+    else:
+        print('\nRunning dbt build for models in git diff + child models...\n')
+
+    try:
+        dbt_cmd_base = f'--project-dir={project_dir} --profiles-dir={profiles_dir} {exclude_stmt} --vars {dbt_vars} {other_args}'
+        dbt_cmd = f'docker compose run dbt build --select {nodes_to_test_str} --full-refresh {dbt_cmd_base}'
+        print(dbt_cmd)
+
+        if not incremental_models:
+            dbt_cmd = dbt_cmd + f' {COMPLETION_PING}'
+
+        dbt_proc = subprocess.check_call(dbt_cmd, shell=True)
+
+        if len(incremental_models) > 0:
+            print(f'\nRunning dbt build for incremental models...\n{set_of_nodes_to_test_incremental}\n')
+            dbt_cmd_incr = f'docker compose run dbt build --select {nodes_to_test_str_incr} {dbt_cmd_base}'
+            print(dbt_cmd_incr)
+            dbt_proc_incr = subprocess.check_call(dbt_cmd_incr + f' {COMPLETION_PING}', shell=True)
+        _remove_orphaned_containers()
+
+        if len(nodes_missing_schema_config) > 0:
+            print('\033[31m' + '\n\nWARNING: the following models/seeds are missing a schema config, please add it to dbt_project.yml')
+            print(f'\t{nodes_missing_schema_config}' + '\033[39m')
+
+    except Exception as e:
+        if proc.returncode == 0:
+            subprocess.run(f"ssh -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -O exit {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+        sys.exit(1) 
+    print('\033[32m' + f'\nTesting completed successfully...\n\nModels tested:\n{set_of_nodes_to_test}\n')
+except Exception as e:
+    sys.exit(e)
+
+if proc.returncode == 0:
+    subprocess.run(f"ssh -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -O exit {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+
+sys.exit(dbt_proc)

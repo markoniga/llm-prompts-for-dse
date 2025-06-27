@@ -6,10 +6,17 @@
 # Context Gap Prompt
 
 ## PURPOSE
-This prompt helps identify missing information needed to address a data workflow request. It analyzes context gaps and gathers necessary schema information, business logic, and other relevant details to ensure a complete understanding of the task.
+This prompt helps identify missing information needed to address a data workflow request **in the data-vault repository environment**. It analyzes context gaps and gathers necessary schema information, business logic, and other relevant details to ensure a complete understanding of the task.
+
+## DATA-VAULT REPOSITORY CONTEXT
+**🏗️ Working in the data-vault environment:**
+- **Schema Discovery**: Use `preset.audit_logs` to find actual schema usage patterns
+- **Local Development**: Your work happens in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema
+- **Testing Strategy**: Leverage `./dbt/test_all_changes` for git-based testing
+- **Dependencies**: dbt manifest file provides complete dependency graph
 
 ## CURSOR AGENT EXECUTION GUIDE
-**Use this prompt AFTER intent classification** to gather all missing context before proceeding with code generation or documentation.
+**Use this prompt AFTER intent classification** to gather all missing context before proceeding with code generation or documentation **in the data-vault environment**.
 
 ### Context Assessment Checklist
 - [ ] Schema details are complete (models, fields, relationships)

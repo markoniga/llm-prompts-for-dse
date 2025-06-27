@@ -19,6 +19,13 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 - [ ] Testing requirements are specified
 - [ ] Performance considerations are understood
 
+## DATA-VAULT REPOSITORY CONTEXT
+**🏗️ Working in the data-vault environment:**
+- **Schema Naming**: Use `dev_{DEV_SQL_SCHEMA_PREFIX}` for development (e.g., `dev_moniga`)
+- **Testing Strategy**: Leverage `./dbt/test_all_changes` for git-based testing
+- **YAML Generation**: Use `./dbt/dbt_yaml_gen --select model_name` for schema files
+- **Development Pattern**: Create views from prod tables via `--rebuild` for faster iteration
+
 ## EXECUTION WORKFLOW
 
 ### Step 1: Validate Requirements Completeness
@@ -28,6 +35,7 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 - Field specifications (names, types, descriptions)
 - Business logic and transformations
 - Testing and validation requirements
+- **Data-vault specific**: Schema placement (which domain schema: `marketing`, `finance`, etc.)
 
 ### Step 2: OPTIMIZE QUERY FIRST - MACRO CREATION IS LAST RESORT
 **CRITICAL: Always prioritize query optimization over macro creation**

@@ -6,10 +6,18 @@
 # Reconcile Prompt
 
 ## PURPOSE
-This prompt automates local dbt build and Preset reconciliation workflow. It runs `dbt build --select {{ models }}`, validates the build success, executes Preset MCP reconciliation, and summarizes differences in a clear Markdown table format.
+This prompt automates local dbt build and Preset reconciliation workflow **in the data-vault repository environment**. It runs `dbt build --select {{ models }}` using data-vault patterns, validates the build success, executes Preset MCP reconciliation, and summarizes differences in a clear Markdown table format.
+
+## DATA-VAULT REPOSITORY CONTEXT
+**🏗️ Working in the data-vault environment:**
+- **Use data-vault dbt wrappers**: `./dbt/dbt --select {{ models }} --rebuild` instead of raw dbt
+- **Schema Context**: Your changes are in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema  
+- **Git-based Testing**: Consider using `./dbt/test_all_changes` for comprehensive testing
+- **Docker Execution**: All dbt commands run via `docker compose run dbt`
+- **Environment**: Requires VPN + SSH tunnels to production systems
 
 ## CURSOR AGENT EXECUTION GUIDE
-**Use this prompt AFTER successful code generation** to validate changes and reconcile with production systems.
+**Use this prompt AFTER successful code generation** to validate changes and reconcile with production systems using data-vault workflow patterns.
 
 ### Pre-Execution Checklist
 - [ ] Target models are clearly identified 

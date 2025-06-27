@@ -1,0 +1,134 @@
+#!/usr/bin/env python
+import argparse
+import ast
+import os
+import subprocess
+import sys
+import yaml
+import re
+import math
+
+from dbt_helpers import _get_manifest
+
+DBT_HOME = '/usr/local/data-vault'
+ENV = os.environ.copy()
+
+parser = argparse.ArgumentParser(description='Run DBT with supplied args.')
+parser.add_argument('--profiles-dir', default=f'{DBT_HOME}/profiles', help='Will supply the specified profile.')
+parser.add_argument('--project-dir', default='wealthsimple', help='Will supply the specified project.')
+parser.add_argument('--select', nargs='+', required=True, help='Models to generate YAML for.')
+
+
+class Dumper(yaml.Dumper):
+    def increase_indent(self, flow=False, *args, **kwargs):
+        return super().increase_indent(flow=flow, indentless=False)
+
+
+def _get_node_key(node, manifest, key):
+    for model in manifest['nodes'].values():
+        if model['name'] == node:
+            return model[key]
+
+
+def _schema_file_exists_in_path(path):
+    return os.path.isfile(f'{path}/schema.yml')
+
+
+def _get_yml_config(yml_str):
+    return yaml.safe_load(yml_str)
+
+
+def str_presenter(dumper, data):
+    if data.count('\n') > 0:
+        block = "\n".join([line.rstrip() for line in data.splitlines()])
+        if data.endswith("\n"):
+            block += "\n"
+        return dumper.represent_scalar("tag:yaml.org,2002:str", block, style="|")
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+
+
+def _get_yml_stream(yml_config):
+    yaml.add_representer(str, str_presenter)
+    yaml.representer.SafeRepresenter.add_representer(str, str_presenter) # to use with safe_dum
+    stream = yaml.dump(
+        yml_config, Dumper=Dumper, default_flow_style=False, sort_keys=False, width=math.inf
+    )
+    main_keys = re.compile(r"(\n\w+)")
+    next_blocks = re.compile(r"(?<!:)(\n {0,6}- )")  # only first and second level list elements here + exclude the first elements (that directly follow the list's name (and colon) )
+    double_newline = lambda m: f"\n{m.group(1)}"  # noqa: E731
+    stream, _n = re.subn(main_keys, double_newline, stream)
+    stream, _n = re.subn(next_blocks, double_newline, stream)
+
+    return stream
+
+
+try:
+    proc = subprocess.run(f"ssh -M -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -fnNT -L {ENV['LOCAL_FORWARD_PANTHEON']} {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise Exception('Unable to establish tunnel. Please connect to VPN.')
+
+    args, unargs = parser.parse_known_args()
+    BASE_PATH = f'{os.getcwd()}/projects/{args.project_dir}'
+    target_path = f'{os.getcwd()}/projects/{args.project_dir}/target'
+    manifest = _get_manifest(target_path)  # should proabbly compile
+    # MODEL = 'prep_identities'
+    for MODEL in args.select:
+        print(f'Generating YAML for model: {MODEL}')
+        args_ = f'--args \'{{"model_names": ["{MODEL}"]}}\''
+        dbt_proc = subprocess.run(f'docker compose run --service-ports dbt --quiet run-operation generate_model_yaml {args_} --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple', shell=True, capture_output=True)
+        if dbt_proc.returncode != 0:
+            print(dbt_proc.stdout.decode('utf-8'))
+            sys.exit(dbt_proc.returncode)
+        model_yml_config = _get_yml_config(dbt_proc.stdout.decode('utf-8'))
+        model_file_path = BASE_PATH + '/' + _get_node_key(MODEL, manifest, "original_file_path")
+        model_folder_path = '/'.join(model_file_path.split('/')[:-1])
+
+        # Get the path to the model's schema.yml file
+        model_yml_path = _get_node_key(MODEL, manifest, "patch_path")
+
+        # if model has no patch_path (properties file) AND if no schema file exists in the model's folder -> create new
+        if model_yml_path is None:
+            print(f'No existing properties found for model: {MODEL}')
+            if not _schema_file_exists_in_path(model_folder_path):
+                print(f'Creating new schema.yml for model: {MODEL} @ {model_folder_path}')
+                model_yml_stream = _get_yml_stream(model_yml_config)
+                with open(f'{model_folder_path}/schema.yml', 'w') as f:
+                    f.write(model_yml_stream)
+            else:
+                print(f'Appending to existing schema.yml for model: {MODEL} @ {model_folder_path}')
+                with open(f'{model_folder_path}/schema.yml', 'r') as f:
+                    existing_yml = _get_yml_config(f)
+                existing_yml['models'].append(model_yml_config['models'][0])
+                with open(f'{model_folder_path}/schema.yml', 'w') as f:
+                    f.write(_get_yml_stream(existing_yml))
+        else:
+            model_yml_path = BASE_PATH + "/" + model_yml_path.replace("wealthsimple://", "")
+            print(f'Appending to existing properties for model: {MODEL} @ {model_yml_path}')
+            columns_to_add = model_yml_config['models'][0]['columns']
+            existing_columns = _get_node_key(
+                MODEL, manifest, "columns")
+
+            # get yml file contents
+            with open(model_yml_path, 'r') as f:
+                existing_yml = _get_yml_config(f)
+
+            # remove existing columns from model_yml_config
+            for column in columns_to_add:
+                col = column['name']
+                if col in list(existing_columns.keys()):
+                    columns_to_add.remove(column)
+            # append new columns to existing_yml
+            for model in existing_yml['models']:
+                if model['name'] == MODEL:
+                    model['columns'].extend(columns_to_add)
+            # write to file
+            with open(model_yml_path, 'w') as f:
+                f.write(_get_yml_stream(existing_yml))
+
+except Exception as e:
+    sys.exit(e)
+
+if proc.returncode == 0:
+    subprocess.run(f"ssh -S ~/data-vault-ctrl-socket-{ENV['JUMPBOX_HOST_PROD']} -O exit {ENV['SSH_USER']}@{ENV['JUMPBOX_HOST_PROD']}", shell=True, capture_output=True, text=True)
+
+sys.exit()

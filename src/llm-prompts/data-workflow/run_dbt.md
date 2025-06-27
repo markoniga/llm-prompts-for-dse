@@ -6,10 +6,57 @@
 # Run dbt Prompt
 
 ## Purpose
-This prompt helps execute dbt commands safely and efficiently. It generates optimized dbt commands with appropriate flags and options based on the task requirements, ensuring reliable and efficient model builds and tests.
+This prompt helps execute dbt commands safely and efficiently in the **data-vault repository environment**. It generates optimized dbt commands with appropriate flags and options based on the task requirements, ensuring reliable and efficient model builds and tests using established data-vault patterns.
+
+## DATA-VAULT REPOSITORY CONTEXT
+**🏗️ Critical Environment Details for data scientists working in data-vault:**
+
+### **Development Environment Setup**
+- **Execution**: All dbt commands run via `docker compose run dbt` (never raw dbt)
+- **SSH Tunneling**: Requires VPN connection + SSH tunnels to production via jumpbox
+- **Project Location**: `/usr/local/data-vault/projects/wealthsimple`
+- **Profiles Directory**: `/usr/local/data-vault/profiles`
+
+### **Schema Naming Conventions**
+- **Your Dev Schema**: `dev_{DEV_SQL_SCHEMA_PREFIX}` (e.g., `dev_moniga`, `dev_johndoe`)
+- **Production Schemas**: Domain-based (`marketing`, `finance`, `tax`, `trade`, etc.)
+- **Prep Tables**: Use `_backroom` suffix (`marketing_backroom`, `tax_backroom`)
+
+### **Data-Vault dbt Wrapper Scripts (use these instead of raw dbt)**
+```bash
+# Main dbt wrapper with rebuild, notifications, dependency management
+./dbt/dbt --select model_name --rebuild
+
+# Git-based testing of changed models + their children  
+./dbt/test_all_changes --build-only
+
+# Rebuild just upstream dependencies as views
+./dbt/rebuild --select model_name
+
+# Generate YAML schema files for models
+./dbt/dbt_yaml_gen --select model_name
+```
+
+### **Default Behaviors You Should Know**
+- **Date Variable**: `ds` automatically defaults to yesterday's date if not specified
+- **User Confirmation**: You'll be prompted if >10 models are selected (suggests using rebuild)
+- **Dependency Management**: Auto-runs `dbt deps` if modules are missing
+- **Notifications**: macOS notifications alert when jobs complete/fail
+- **Incremental Models**: Handled separately with special logic
+
+### **Key dbt Operations Available**
+- **`create_views_from_prod_tables`**: Creates dev views from production tables (faster development)
+- **`drop_existing_views_in_dev_schema`**: Cleans up existing dev views
+- **`generate_model_yaml`**: Auto-generates YAML schema files
+
+### **Recommended Development Workflow**
+1. **Use `./dbt/test_all_changes`** for testing changes (git diff-based)
+2. **Use `--rebuild` flag** when dependencies are stale
+3. **Use `--row-limit`** for faster development with limited data
+4. **Use git-based selection** to automatically test what you've changed
 
 ## Usage
-Use this prompt when you need to run dbt commands as part of a data workflow, particularly after code changes have been validated and are ready for execution.
+Use this prompt when you need to run dbt commands as part of a data workflow, particularly after code changes have been validated and are ready for execution **in the data-vault environment**.
 
 ## Input Context
 - The specific models or tests to run
