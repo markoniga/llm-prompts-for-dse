@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simulate prompt execution to validate chat output length limits.
-Ensures no prompt generates more than 40 lines of output in chat.
+Simulate prompt execution to validate reasonable chat output.
+Ensures prompts generate appropriate output for review and discussion in chat.
 """
 
 import os
@@ -14,24 +14,21 @@ def count_output_lines(prompt_content: str, test_input: str = None) -> int:
     Simulate prompt execution and count output lines.
     Returns the number of lines that would be output to chat.
     """
-    # For generate_code prompts, simulate with different code sizes
+    # For generate_code prompts, code should be built in chat for review
     if "generate_code" in prompt_content.lower():
-        # Test with small code (should show JSON)
-        small_code_lines = 25
-        # Test with large code (should show file write message)
-        large_code_lines = 60
-        
-        if test_input and "large" in test_input:
-            # Large code should result in single line: "✅ Code written to..."
-            return 1
-        else:
-            # Small code returns JSON structure (estimate ~35 lines)
-            return 35
+        # All code should be in chat first for discussion and refinement
+        # JSON structure + code content for review
+        return 50
     
     # For validate_risk prompts, should return markdown table (max 5 rows + headers)
     elif "validate_risk" in prompt_content.lower():
         # Risk table: header + 5 rows + additional sections = ~15 lines max
         return 15
+    
+    # For reconcile prompts, queries should be built in chat first
+    elif "reconcile" in prompt_content.lower():
+        # Reconciliation queries + results summary in chat
+        return 40
     
     # For other prompts, assume reasonable output
     else:
@@ -53,23 +50,20 @@ def validate_prompt_file(prompt_path: Path) -> dict:
             'issues': []
         }
         
-        # Check if any scenario exceeds 40 lines
-        if results['small_input_lines'] > 40:
+        # Check if output is reasonable for chat review (allowing for code discussion)
+        max_lines = max(results['small_input_lines'], results['large_input_lines'])
+        if max_lines > 80:  # More generous limit for code review in chat
             results['passed'] = False
-            results['issues'].append(f"Small input generates {results['small_input_lines']} lines (>40)")
-            
-        if results['large_input_lines'] > 40:
-            results['passed'] = False
-            results['issues'].append(f"Large input generates {results['large_input_lines']} lines (>40)")
+            results['issues'].append(f"Output too verbose: {max_lines} lines (>80)")
         
         # Check for specific patterns
         if "generate_code" in prompt_path.name:
-            if "cursor.write_file" not in content:
+            if "build code in chat first" not in content.lower():
                 results['passed'] = False
-                results['issues'].append("Missing cursor.write_file() for large code blocks")
-            if "cursor.show_diff" not in content:
+                results['issues'].append("Should emphasize building code in chat for review first")
+            if "no additional file creation" not in content.lower():
                 results['passed'] = False
-                results['issues'].append("Missing cursor.show_diff() for file preview")
+                results['issues'].append("Should specify no additional file creation after initial implementation")
         
         if "validate_risk" in prompt_path.name:
             if "never use verbose json" not in content.lower():
@@ -92,7 +86,7 @@ def validate_prompt_file(prompt_path: Path) -> dict:
 
 def main():
     """Main validation function."""
-    print("🧪 PROMPT OUTPUT LENGTH VALIDATION")
+    print("🧪 PROMPT CHAT OUTPUT VALIDATION")
     print("=" * 50)
     
     # Find all prompt files
@@ -130,7 +124,7 @@ def main():
     print(f"📊 SUMMARY: {passed}/{total} prompts passed")
     
     if passed == total:
-        print("✅ All prompts respect the 40-line chat limit!")
+        print("✅ All prompts generate appropriate chat output for review and discussion!")
     else:
         print("❌ Some prompts need fixes before proceeding")
         sys.exit(1)

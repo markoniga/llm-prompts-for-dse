@@ -38,10 +38,33 @@ dbt build --select {{ models }}
 - No critical warnings
 - Build completes within reasonable time
 
-### Step 3: Preset Reconciliation
-**Execute MCP reconciliation:**
-```python
-preset.reconcile('{{ models }}')
+### Step 3: Generate and Execute Reconciliation Queries
+**Build reconciliation queries in chat first, then execute via Preset MCP:**
+
+**Step 3a: Generate reconciliation queries in chat for review**
+```sql
+-- Row count comparison for {{ model_name }}
+SELECT 
+  'production' as environment,
+  COUNT(*) as row_count,
+  '{{ model_name }}' as model_name,
+  MAX(updated_at) as last_updated
+FROM prod.{{ model_name }}
+
+UNION ALL
+
+SELECT 
+  'development' as environment,
+  COUNT(*) as row_count,
+  '{{ model_name }}' as model_name,
+  MAX(updated_at) as last_updated
+FROM dev_schema.{{ model_name }}
+```
+
+**Step 3b: Execute via Preset MCP after query validation**
+Only execute after confirming queries are correct:
+```
+mcp.preset.query(database_id=<id>, sql=<validated_query>)
 ```
 
 **Reconciliation checks:**
@@ -133,15 +156,18 @@ dbt build --select {{ models }} --profiles-dir ~/.dbt
 - Execution time per model
 - Any warnings or errors
 
-### Step 4: Execute Preset Reconciliation
-```python
-# Use MCP to reconcile with Preset
-results = preset.reconcile('{{ models }}')
+### Step 4: Execute Reconciliation via Preset MCP
+**After building and validating queries in chat:**
+```
+# Execute validated reconciliation queries via MCP
+mcp.preset.query(database_id=<database_id>, sql=<row_count_query>)
+mcp.preset.query(database_id=<database_id>, sql=<schema_comparison_query>)
+mcp.preset.query(database_id=<database_id>, sql=<freshness_check_query>)
 ```
 
-**Collect metrics:**
+**Collect metrics from query results:**
 - Row counts (dev vs prod)
-- Schema comparisons
+- Schema comparisons  
 - Data freshness timestamps
 - Dependency validation
 
