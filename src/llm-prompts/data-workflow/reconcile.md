@@ -10,10 +10,10 @@ This prompt automates local dbt build and Preset reconciliation workflow **in th
 
 ## DATA-VAULT REPOSITORY CONTEXT
 **🏗️ Working in the data-vault environment:**
-- **Docker Execution**: All dbt commands via `docker compose run dbt --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
+- **Docker Execution**: All dbt commands via simple dbt command
 - **Schema Context**: Your changes are in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema (e.g., `dev_moniga`)
-- **Git-based Testing**: Use `git diff --name-only --diff-filter=d origin/main...` to find changed models, then build with `+` selector
-- **Rebuild Pattern**: Use `run-operation create_views_from_prod_tables` with `{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table"]}`
+- **Git-based Testing**: Use `git diff --name-only --diff-filter=d origin/main...` to find changed models, then `dbt build --select changed_models+`
+- **Rebuild Pattern**: Use `dbt build --select model_name --rebuild` for faster development with production views
 - **Environment**: Requires VPN + SSH tunnels: `ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON}`
 - **Notifications**: macOS alerts via osascript for completion status
 - **Container Cleanup**: Always run `docker compose down --remove-orphans` after execution
@@ -43,10 +43,10 @@ This prompt automates local dbt build and Preset reconciliation workflow **in th
 ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}
 
 # Auto-install dependencies if missing
-docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+dbt deps
 
 # Build with data-vault patterns
-docker compose run dbt build --select {{ models }} --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
+dbt build --select {{ models }} --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
 
 # Clean up containers
 docker compose down --remove-orphans

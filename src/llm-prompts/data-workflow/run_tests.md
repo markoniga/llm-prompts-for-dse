@@ -10,7 +10,7 @@ This prompt runs `dbt build --select {{ models }}` followed by `pytest tests/pro
 
 ## DATA-VAULT REPOSITORY CONTEXT
 **🏗️ Testing in the data-vault environment:**
-- **Docker Execution**: All dbt commands via `docker compose run dbt --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple`
+- **Docker Execution**: All dbt commands via simple dbt command
 - **Git-based Testing**: Leverage `git diff --name-only --diff-filter=d origin/main...` to identify changed models for targeted testing
 - **Incremental Handling**: Test incremental models separately with `--full-refresh` then normal build
 - **Environment Setup**: Requires VPN + SSH tunnels before execution
@@ -34,10 +34,10 @@ This prompt runs `dbt build --select {{ models }}` followed by `pytest tests/pro
 ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD_PANTHEON} ${SSH_USER}@${JUMPBOX_HOST_PROD}
 
 # Install dependencies if missing
-docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+dbt deps
 
 # Execute build with data-vault patterns
-docker compose run dbt build --select {{ models }} --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
+dbt build --select {{ models }} --vars '{"ds": "$(date -v-1d +%Y-%m-%d)"}'
 
 # Clean up containers
 docker compose down --remove-orphans

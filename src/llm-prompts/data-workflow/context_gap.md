@@ -12,9 +12,9 @@ This prompt helps identify missing information needed to address a data workflow
 **🏗️ Working in the data-vault environment:**
 - **Schema Discovery**: Use `mcp.preset.query(database_id=3, sql="SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab'")` to find actual usage patterns
 - **Local Development**: Your work happens in `dev_{DEV_SQL_SCHEMA_PREFIX}` schema (e.g., `dev_moniga`)
-- **Testing Strategy**: Git-based with `git diff --name-only --diff-filter=d origin/main...` to find changed files, then use `docker compose run dbt build --select changed_models+`
+- **Testing Strategy**: Git-based with `git diff --name-only --diff-filter=d origin/main...` to find changed files, then use `dbt build --select changed_models+`
 - **Dependencies**: dbt manifest at `projects/wealthsimple/target/manifest.json` provides complete dependency graph
-- **Model Discovery**: Use `docker compose run dbt ls --select '*pattern*' --project-dir /usr/local/data-vault/projects/wealthsimple --profiles-dir /usr/local/data-vault/profiles`
+- **Model Discovery**: Use `dbt ls --select '*pattern*'` to find models matching pattern
 
 ## CURSOR AGENT EXECUTION GUIDE
 **Use this prompt AFTER intent classification** to gather all missing context before proceeding with code generation or documentation **in the data-vault environment**.

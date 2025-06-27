@@ -25,20 +25,20 @@ This prompt helps execute dbt commands safely and efficiently in the **data-vaul
 ### **Data-Vault dbt Command Patterns (use these exact patterns)**
 ```bash
 # Main dbt execution with Docker (always use docker compose)
-docker compose run dbt build --select model_name --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt build --select model_name 
 
 # With rebuild (creates views from prod tables for dependencies)
-docker compose run dbt run-operation create_views_from_prod_tables --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table"]}'
+dbt build --select <model name> --rebuild
 
 # Git-based testing (test changed models + children)
 git diff --name-only --diff-filter=d origin/main... | grep "projects/wealthsimple/"
-docker compose run dbt build --select changed_models+ --full-refresh --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt build --select changed_models+ --full-refresh
 
 # Generate YAML schema for models
-docker compose run dbt run-operation generate_model_yaml --args '{"model_names": ["model_name"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt run-operation generate_model_yaml --args '{"model_names": ["model_name"]}'
 
 # Clean up existing dev views before rebuild
-docker compose run dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}'
 ```
 
 ### **Default Behaviors You Should Know**
@@ -53,15 +53,15 @@ docker compose run dbt run-operation drop_existing_views_in_dev_schema --args '{
 ### **Key dbt Operations Available**
 - **`create_views_from_prod_tables`**: Creates dev views from production tables (faster development)
   ```bash
-  docker compose run dbt run-operation create_views_from_prod_tables --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table1", "schema.table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  dbt run-operation create_views_from_prod_tables --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "prod_schema_tables": ["schema.table1", "schema.table2"]}'
   ```
 - **`drop_existing_views_in_dev_schema`**: Cleans up existing dev views
   ```bash
-  docker compose run dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  dbt run-operation drop_existing_views_in_dev_schema --args '{"dev_schema": "dev_${DEV_SQL_SCHEMA_PREFIX}", "tables": ["table1", "table2"]}'
   ```
 - **`generate_model_yaml`**: Auto-generates YAML schema files
   ```bash
-  docker compose run dbt run-operation generate_model_yaml --args '{"model_names": ["model1", "model2"]}' --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+  dbt run-operation generate_model_yaml --args '{"model_names": ["model1", "model2"]}'
   ```
 
 ### **Git-Based Model Detection Patterns**
@@ -76,10 +76,10 @@ git diff --name-only --diff-filter=d origin/main... | grep "projects/wealthsimpl
 # Changed files need to be matched against manifest['nodes'][node_key]['original_file_path']
 
 # Build changed models plus children (downstream dependencies)
-docker compose run dbt build --select changed_model1 changed_model2+ --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt build --select changed_model1 changed_model2+
 
 # Handle incremental models separately (run with --full-refresh first)
-docker compose run dbt build --select incremental_models --full-refresh --profiles-dir /usr/local/data-vault/profiles --project-dir /usr/local/data-vault/projects/wealthsimple
+dbt build --select incremental_models --full-refresh
 ```
 
 ### **Environment Setup and Dependency Management**
@@ -89,7 +89,7 @@ ssh -M -S ~/data-vault-ctrl-socket-${JUMPBOX_HOST_PROD} -fnNT -L ${LOCAL_FORWARD
 
 # Check and install dependencies if missing
 if [ ! -d "projects/wealthsimple/dbt_modules" ] || [ -z "$(ls -A projects/wealthsimple/dbt_modules)" ]; then
-  docker compose run dbt deps --project-dir=/usr/local/data-vault/projects/wealthsimple --profiles-dir=/usr/local/data-vault/profiles
+  dbt deps
 fi
 
 # Cleanup after execution
