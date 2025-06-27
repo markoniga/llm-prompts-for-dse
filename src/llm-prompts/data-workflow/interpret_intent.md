@@ -122,6 +122,11 @@ else:
 - "marketing", "campaign", "ads" → "Marketing"
 - "finance", "cost", "budget" → "Finance"
 - "product", "feature", "usage" → "Product Analytics"
+- "payment", "transaction", "money-movement" → "Payment Processing"
+- "inventory", "stock", "supply" → "Inventory Management"
+- "reporting", "compliance", "audit" → "Financial Reporting"
+- "pipeline", "ETL", "migration" → "Data Engineering"
+- "legacy", "refactor", "modernize" → "System Modernization"
 
 **Urgency Assessment:**
 - "urgent", "ASAP", "today", "emergency" → "critical"
