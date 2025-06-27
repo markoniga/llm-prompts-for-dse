@@ -43,28 +43,34 @@ dbt build --select {{ models }}
 
 **Step 3a: Generate reconciliation queries in chat for review**
 ```sql
--- Row count comparison for {{ model_name }}
+-- Overall comparison of data completeness between production and dev for {{ model_name }}
 SELECT 
-  'production' as environment,
-  COUNT(*) as row_count,
-  '{{ model_name }}' as model_name,
-  MAX(updated_at) as last_updated
-FROM prod.{{ model_name }}
+    'Production' as environment,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN primary_key IS NOT NULL THEN 1 END) as records_with_primary_key,
+    COUNT(CASE WHEN primary_key IS NULL THEN 1 END) as records_without_primary_key,
+    COUNT(CASE WHEN updated_at IS NOT NULL THEN 1 END) as records_with_updated_at,
+    ROUND(COUNT(CASE WHEN primary_key IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2) as pct_with_primary_key,
+    MAX(updated_at) as last_updated
+FROM {{ schema }}.{{ model_name }}
 
 UNION ALL
 
 SELECT 
-  'development' as environment,
-  COUNT(*) as row_count,
-  '{{ model_name }}' as model_name,
-  MAX(updated_at) as last_updated
-FROM dev_schema.{{ model_name }}
+    'Dev' as environment,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN primary_key IS NOT NULL THEN 1 END) as records_with_primary_key,
+    COUNT(CASE WHEN primary_key IS NULL THEN 1 END) as records_without_primary_key,
+    COUNT(CASE WHEN updated_at IS NOT NULL THEN 1 END) as records_with_updated_at,
+    ROUND(COUNT(CASE WHEN primary_key IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2) as pct_with_primary_key,
+    MAX(updated_at) as last_updated
+FROM dev_{{ username }}.{{ model_name }}
 ```
 
 **Step 3b: Execute via Preset MCP after query validation**
 Only execute after confirming queries are correct:
 ```
-mcp.preset.query(database_id=<id>, sql=<validated_query>)
+mcp.preset.query(database_id=3, sql=<validated_query>)
 ```
 
 **Reconciliation checks:**
@@ -157,16 +163,39 @@ dbt build --select {{ models }} --profiles-dir ~/.dbt
 - Any warnings or errors
 
 ### Step 4: Execute Reconciliation via Preset MCP
+**CRITICAL: Follow Preset MCP Query Guidelines**
+
+**Schema Usage Rules:**
+- **Production**: Use domain schema directly (e.g., `marketing`, `finance`, `tax`, `trade`)
+- **Development**: Use `dev_<username>` format (e.g., `dev_moniga`, `dev_johndoe`)
+- **Prep Tables**: Use `_backroom` suffix (e.g., `tax_backroom`, `marketing_backroom`)
+- **Database ID**: Always use `database_id=3`
+- **Query Format**: Always use `<schema>.<table_name>`
+
+**NEVER query information_schema or system tables for schema discovery**
+
+**Available Production Schemas:**
+- **marts** (Final business logic tables): `activation`, `marketing`, `finance`, `trade`, `cash`, `credit`, `fraud`, `client_data`, `authentication`, `invest`, `crypto`, `sales`, `tax`
+- **prep** (Intermediate processing tables): `activation_backroom`, `marketing_backroom`, `finance_backroom`, `trade_backroom`, `cash_backroom`, `credit_backroom`, `fraud_backroom`, `tax_backroom`, etc.
+- **workspaces** (Specialized analysis): `experiments`, `fraud`, `ltv`, `feature_factory`, `hightouch`
+
+**Development Schema Notes:**
+- Username is derived from `DEV_SQL_SCHEMA_PREFIX` environment variable
+- Format: `dev_<username>` (e.g., `dev_moniga`, `dev_johndoe`)
+
 **After building and validating queries in chat:**
 ```
 # Execute validated reconciliation queries via MCP
-mcp.preset.query(database_id=<database_id>, sql=<row_count_query>)
-mcp.preset.query(database_id=<database_id>, sql=<schema_comparison_query>)
-mcp.preset.query(database_id=<database_id>, sql=<freshness_check_query>)
+mcp.preset.query(database_id=3, sql=<row_count_query>)
+mcp.preset.query(database_id=3, sql=<schema_comparison_query>)
+mcp.preset.query(database_id=3, sql=<freshness_check_query>)
 ```
+
+**Always display the SQL query used alongside results for transparency**
 
 **Collect metrics from query results:**
 - Row counts (dev vs prod)
+- Data completeness percentages
 - Schema comparisons  
 - Data freshness timestamps
 - Dependency validation
@@ -179,29 +208,56 @@ mcp.preset.query(database_id=<database_id>, sql=<freshness_check_query>)
 
 ## OPTIMIZED EXAMPLE EXECUTION
 
-### Example: Reconciling Orders Pipeline
-**Models:** `stg_orders`, `int_orders_enriched`, `fct_orders`
+### Example: Reconciling Tax Payment Pipeline
+**Models:** `prep_tax_payments`, `stg_tax_payments`, `fct_tax_payments`
 
 **Build Command:**
 ```bash
-dbt build --select stg_orders int_orders_enriched fct_orders
+dbt build --select prep_tax_payments stg_tax_payments fct_tax_payments
+```
+
+**Reconciliation Query Example:**
+```sql
+-- Query Used:
+-- Overall comparison of data completeness between production and dev
+SELECT 
+    'Production' as environment,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN return_id IS NOT NULL THEN 1 END) as records_with_return_id,
+    COUNT(CASE WHEN return_id IS NULL THEN 1 END) as records_without_return_id,
+    COUNT(CASE WHEN identity_canonical_id IS NOT NULL THEN 1 END) as records_with_identity_canonical_id,
+    COUNT(CASE WHEN user_canonical_id IS NOT NULL THEN 1 END) as records_with_user_canonical_id,
+    ROUND(COUNT(CASE WHEN identity_canonical_id IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2) as pct_with_identity_canonical_id
+FROM tax_backroom.prep_tax_payments 
+
+UNION ALL
+
+SELECT 
+    'Dev' as environment,
+    COUNT(*) as total_records,
+    COUNT(CASE WHEN return_id IS NOT NULL THEN 1 END) as records_with_return_id,
+    COUNT(CASE WHEN return_id IS NULL THEN 1 END) as records_without_return_id,
+    COUNT(CASE WHEN identity_canonical_id IS NOT NULL THEN 1 END) as records_with_identity_canonical_id,
+    COUNT(CASE WHEN user_canonical_id IS NOT NULL THEN 1 END) as records_with_user_canonical_id,
+    ROUND(COUNT(CASE WHEN identity_canonical_id IS NOT NULL THEN 1 END) * 100.0 / COUNT(*), 2) as pct_with_identity_canonical_id
+FROM dev_moniga.prep_tax_payments
 ```
 
 **Expected Output:**
 
 ### 🚀 Build Execution Summary
-- **command_executed** → `dbt build --select stg_orders int_orders_enriched fct_orders`
+- **command_executed** → `dbt build --select prep_tax_payments stg_tax_payments fct_tax_payments`
 - **execution_time** → 1m 47s  
 - **models_built** → 3 models (3 successful, 0 warnings)
 - **tests_run** → 8 tests (8 passed, 0 warnings)
 - **overall_status** → ✅ SUCCESS
 
 ### 📊 Preset Reconciliation Results
-| Model | Dev Rows | Prod Rows | Row Diff | Schema Match | Data Fresh | Status |
-|-------|----------|-----------|----------|--------------|------------|--------|
-| stg_orders | 2,456,789 | 2,456,785 | +4 | ✅ MATCH | ✅ FRESH | 🟢 OK |
-| int_orders_enriched | 2,456,789 | 2,456,785 | +4 | ✅ MATCH | ✅ FRESH | 🟢 OK |
-| fct_orders | 2,456,789 | 2,456,785 | +4 | ✅ MATCH | ✅ FRESH | 🟢 OK |
+| Model | Dev Records | Prod Records | Diff | Complete % | Identity % | Status |
+|-------|-------------|--------------|------|------------|------------|--------|
+| prep_tax_payments | 2,456,789 | 2,456,785 | +4 | 98.5% | 95.2% | 🟢 OK |
+| stg_tax_payments | 2,456,789 | 2,456,785 | +4 | 98.5% | 95.2% | 🟢 OK |
+| fct_tax_payments | 2,456,789 | 2,456,785 | +4 | 98.5% | 95.2% | 🟢 OK |
 
 ### 🔍 Detailed Differences
 **Row Count Analysis:**

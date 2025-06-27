@@ -193,7 +193,7 @@ Output:
           {
             "step_number": 1,
             "description": "Identify any active processes using the table",
-            "command": "SELECT * FROM information_schema.processlist WHERE info LIKE '%customer_orders%' AND command != 'Sleep';",
+            "command": "-- Check for active database processes (use database-specific tools, not information_schema)\n-- Example: SHOW PROCESSLIST; (MySQL) or SELECT * FROM pg_stat_activity; (PostgreSQL)",
             "verification": "Confirm no critical processes are actively writing to the table",
             "fallback": "If critical processes are active, coordinate with application teams before proceeding"
           },
@@ -246,7 +246,7 @@ Output:
     "verification_steps": [
       {
         "description": "Verify the loyalty_tier column no longer exists",
-        "query": "SELECT column_name FROM information_schema.columns WHERE table_name = 'customer_orders' AND column_name = 'loyalty_tier';",
+        "query": "-- Verify column removal using database-specific commands\n-- Example: DESCRIBE customer_orders; (MySQL) or \\d customer_orders; (PostgreSQL)",
         "expected_result": "No rows returned, confirming the column does not exist"
       },
       {
@@ -366,7 +366,7 @@ Output:
           {
             "step_number": 1,
             "description": "Identify any processes using the new table",
-            "command": "SELECT * FROM information_schema.processlist WHERE info LIKE '%customer_orders_new%' AND command != 'Sleep';",
+            "command": "-- Check for active database processes using the table (use database-specific tools)\n-- Example: SHOW PROCESSLIST; (MySQL) or SELECT * FROM pg_stat_activity WHERE query LIKE '%customer_orders_new%'; (PostgreSQL)",
             "verification": "Confirm no critical processes are using the table",
             "fallback": "If processes are found, coordinate with application teams to stop them"
           },

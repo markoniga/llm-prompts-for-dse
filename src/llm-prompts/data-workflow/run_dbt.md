@@ -192,25 +192,27 @@ When running models that modify existing schemas, include reconciliation steps:
 ### Pre-Execution Reconciliation
 - **Schema Baseline Capture**:
   ```sql
+  -- Query Used:
   -- Capture production schema structure before changes
   SELECT 
     column_name,
     data_type,
     character_maximum_length,
     is_nullable
-  FROM prod_schema.model_name
+  FROM marketing.model_name  -- Use actual domain schema (marketing, finance, tax, etc.)
   ORDER BY column_name;
   ```
 
 - **Data Volume Baseline**:
   ```sql
+  -- Query Used:
   -- Capture row counts and data distribution before changes
   SELECT 
     COUNT(*) as total_rows,
     COUNT(DISTINCT primary_key) as distinct_keys,
     MIN(updated_at) as earliest_record,
     MAX(updated_at) as latest_record
-  FROM prod_schema.model_name;
+  FROM marketing.model_name;  -- Use actual domain schema
   ```
 
 - **Dependency Mapping**:
@@ -245,13 +247,14 @@ When running models that modify existing schemas, include reconciliation steps:
 ### Post-Execution Reconciliation
 - **Schema Comparison Queries**:
   ```sql
+  -- Query Used:
   -- Compare development vs production schemas
   SELECT 
     'development' as environment,
     column_name,
     data_type,
     character_maximum_length
-  FROM dev_schema.model_name
+  FROM dev_moniga.model_name  -- Use dev_<username> format
   
   UNION ALL
   
@@ -260,13 +263,14 @@ When running models that modify existing schemas, include reconciliation steps:
     column_name,
     data_type,
     character_maximum_length
-  FROM prod_schema.model_name
+  FROM marketing.model_name  -- Use actual domain schema
   
   ORDER BY column_name, environment;
   ```
 
 - **Data Integrity Verification**:
   ```sql
+  -- Query Used:
   -- Verify data integrity after changes
   SELECT 
     'development' as environment,
@@ -274,7 +278,7 @@ When running models that modify existing schemas, include reconciliation steps:
     COUNT(DISTINCT primary_key) as distinct_keys,
     MIN(updated_at) as earliest_date,
     MAX(updated_at) as latest_date
-  FROM dev_schema.model_name
+  FROM dev_moniga.model_name  -- Use dev_<username> format
   
   UNION ALL
   
@@ -284,18 +288,19 @@ When running models that modify existing schemas, include reconciliation steps:
     COUNT(DISTINCT primary_key) as distinct_keys,
     MIN(updated_at) as earliest_date,
     MAX(updated_at) as latest_date
-  FROM prod_schema.model_name;
+  FROM marketing.model_name;  -- Use actual domain schema
   ```
 
 - **Downstream Impact Verification**:
   ```sql
+  -- Query Used:
   -- Verify downstream model integrity
   SELECT 
-    downstream_model,
+    'downstream_model' as model_name,
     COUNT(*) as row_count,
     COUNT(*) - COUNT(DISTINCT join_key) as duplicate_keys
-  FROM dev_schema.downstream_model
-  GROUP BY downstream_model;
+  FROM dev_moniga.downstream_model  -- Use dev_<username> format
+  GROUP BY model_name;
   ```
 
 ### Reconciliation Documentation
@@ -307,6 +312,7 @@ When running models that modify existing schemas, include reconciliation steps:
 
 - **Schema Change Summary**:
   ```sql
+  -- Query Used:
   -- Generate schema change summary
   SELECT 
     column_name,
@@ -320,9 +326,9 @@ When running models that modify existing schemas, include reconciliation steps:
     COALESCE(prod.data_type, 'N/A') as prod_type,
     COALESCE(dev.data_type, 'N/A') as dev_type
   FROM 
-    (SELECT column_name, data_type, character_maximum_length FROM dev_schema.model_name) dev
+    (SELECT column_name, data_type, character_maximum_length FROM dev_moniga.model_name) dev
   FULL OUTER JOIN
-    (SELECT column_name, data_type, character_maximum_length FROM prod_schema.model_name) prod
+    (SELECT column_name, data_type, character_maximum_length FROM marketing.model_name) prod
   ON dev.column_name = prod.column_name
   WHERE dev.column_name IS NULL OR prod.column_name IS NULL OR dev.data_type != prod.data_type OR dev.character_maximum_length != prod.character_maximum_length
   ORDER BY change_type, column_name;
