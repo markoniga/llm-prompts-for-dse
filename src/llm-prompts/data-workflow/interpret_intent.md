@@ -65,6 +65,10 @@ Before analyzing user intent:
 - **estimated_effort** → minutes|hours|days
 - **potential_challenges** → Challenge1, Challenge2... (abbreviated)
 
+### 🔄 NEXT MCP PROMPT
+**After completing intent analysis, always proceed to:**
+> **Use `getContextGapPrompt`** to identify missing information needed to address this request
+
 ## STEP-BY-STEP ANALYSIS PROCESS
 
 ### Step 1: Analyze User Request

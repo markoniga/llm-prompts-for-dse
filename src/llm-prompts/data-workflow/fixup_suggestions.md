@@ -734,6 +734,12 @@ Output:
 }
 ```
 
+### 🔄 NEXT MCP PROMPT
+**After implementing fixup suggestions:**
+- **If fixes implemented successfully**: Return to `getRunDbtPrompt` to re-execute the build process
+- **If fixes need validation**: Use `getValidateRiskPrompt` first if changes are significant
+- **If alternative approaches needed**: Stay in `getFixupSuggestionsPrompt` to explore other solutions
+
 ## Safety Guardrails
 - Always prioritize data integrity and quality over performance
 - Recommend thorough testing before implementing fixes in production

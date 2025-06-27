@@ -741,34 +741,44 @@ Output:
 }
 ```
 
+### 🔄 NEXT MCP PROMPT
+**After completing dbt execution:**
+- **If build success**: Use `getRunTestsPrompt` to run dbt build + pytest validation tests
+- **If build failure**: Use `getTestResultsPrompt` to analyze what went wrong and get fix recommendations
+- **If warnings only**: Use `getRunTestsPrompt` but include warning context for comprehensive testing
+
 ## POST-EXECUTION RECONCILIATION
 
 ### Automatic Preset Reconciliation Chain
-**After successful dbt build completion, automatically trigger reconciliation:**
+**After successful dbt build completion, automatically trigger testing then reconciliation:**
 
 ```bash
 # Step 1: Successful dbt build
 dbt build --select {{ models }}
 
-# Step 2: If build passes, chain to reconciliation
+# Step 2: If build passes, chain to testing
+# Execute getRunTestsPrompt with the same {{ models }}
+
+# Step 3: If tests pass, chain to reconciliation  
 # Execute getReconcilePrompt with the same {{ models }}
 ```
 
-**Reconciliation Workflow:**
-1. ✅ **Build Success** → Proceed to reconciliation
-2. 🔄 **Execute Reconciliation** → `getReconcilePrompt(models={{ models }})`
+**Complete Workflow Chain:**
+1. ✅ **Build Success** → Use `getRunTestsPrompt`
+2. 🧪 **Tests Pass** → Use `getReconcilePrompt`
 3. 📊 **Generate Diff Summary** → Markdown table format
 4. 🎯 **Determine Next Action** → Deploy, review, or fix
 
 **Integration Logic:**
-- **Success**: Chain immediately to `getReconcilePrompt`
-- **Warnings**: Include warning context in reconciliation call
-- **Failure**: Skip reconciliation, focus on error resolution
+- **dbt Success**: Chain to `getRunTestsPrompt`
+- **Test Success**: Chain to `getReconcilePrompt`  
+- **Any Failure**: Use `getTestResultsPrompt` for troubleshooting
 
-**Expected Output After Reconciliation Chain:**
+**Expected Output After Chain:**
 > 🚀 **dbt build completed successfully**  
-> 🔄 **Initiating Preset reconciliation...**  
-> 📊 **Reconciliation results ready for review**
+> 🧪 **Initiating comprehensive testing...**  
+> 🔄 **Starting Preset reconciliation...**  
+> 📊 **All results ready for review**
 
 ## Safety Guardrails
 - Always recommend testing changes in development before production

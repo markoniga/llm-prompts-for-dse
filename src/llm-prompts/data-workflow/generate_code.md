@@ -468,6 +468,10 @@ models:
 - Check for naming conflicts with existing fields
 - Validate that transformations preserve data integrity
 
+### 🔄 NEXT MCP PROMPT
+**After completing code generation and user approval:**
+> **Use `getValidateRiskPrompt`** to assess risks of the proposed changes before execution
+
 ## USER APPROVAL CHECKPOINT
 **After providing your code generation analysis above, always end with:**
 

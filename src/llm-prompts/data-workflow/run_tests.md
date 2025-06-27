@@ -264,6 +264,12 @@ getReconcilePrompt(models={{ models }})
 - Provide rollback instructions for partial failures
 - Include retry logic for transient failures
 
+### 🔄 NEXT MCP PROMPT
+**After completing test execution:**
+- **If all tests pass (🟢)**: Use `getReconcilePrompt` to reconcile with production systems
+- **If failures exist (🔴)**: Use `getTestResultsPrompt` to analyze failures and get fix recommendations  
+- **If warnings only (🟡)**: Use `getReconcilePrompt` but include warning context in reconciliation
+
 ## USER APPROVAL CHECKPOINT
 **After providing your test results above, always end with:**
 

@@ -89,13 +89,15 @@ flowchart TD
     V -->|needs confirm| CF{{"Proceed?"}}
     CF -- yes --> R
     CF -- no --> ABORT[[Abort]]
-    R -->|build success| RC(reconcile.prompt)
+    R -->|build success| RT(run_tests.prompt)
+    RT -->|tests pass| RC(reconcile.prompt)
     RC -->|🟢 all green| PR(create_pr.prompt)
     RC -->|🟡 warnings| CF2{{"Review & Proceed?"}}
     RC -->|🔴 issues| FIX[Manual fix required]
     CF2 -- yes --> PR
     CF2 -- no --> ABORT
     R -->|build failure| T(test_results.prompt)
+    RT -->|tests fail| T
     T -->|fail| FX(fixup_suggestions.prompt)
     PR --> M(merge_guard.prompt)
     M --> DONE[Code merged ✅]

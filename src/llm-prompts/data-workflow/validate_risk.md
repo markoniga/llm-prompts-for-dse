@@ -67,6 +67,12 @@ Use this prompt before executing potentially risky data operations to identify p
 - **monitoring_guidance** → Monitor transaction log, Watch for lock contention
 - **rollback_plan** → possible: true|false | Steps: Step1, Step2...
 
+### 🔄 NEXT MCP PROMPT
+**After completing risk assessment:**
+- **If proceed = true (🟢 safe)**: Use `getRunDbtPrompt` to execute the changes safely
+- **If proceed = false (🔴 high risk)**: Use `getRollbackPlanPrompt` to create safety procedures first
+- **If warnings only (🟡 moderate)**: Review warnings then use `getRunDbtPrompt` with additional safeguards
+
 ## Instructions
 
 1. **Analyze the operation**

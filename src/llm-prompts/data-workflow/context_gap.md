@@ -275,6 +275,12 @@ This prompt helps identify missing information needed to address a data workflow
 - Flag potential security/privacy concerns with sample data
 - Consider downstream impacts of any changes
 
+### 🔄 NEXT MCP PROMPT
+**After completing context gap analysis and user approval:**
+- **For code changes**: Use `getGenerateCodePrompt` to create dbt models, macros, or tests
+- **For documentation only**: Use `getGenDocsPrompt` to create comprehensive documentation
+- **If critical gaps remain**: Stay in `getContextGapPrompt` until all requirements are clear
+
 ## USER APPROVAL CHECKPOINT
 **After providing your analysis above, always end with:**
 

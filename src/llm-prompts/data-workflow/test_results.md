@@ -860,3 +860,9 @@ After tests pass, determine if schema reconciliation is needed:
   ]
 }
 ```
+
+### 🔄 NEXT MCP PROMPT
+**After analyzing test results:**
+- **If tests pass and quality good**: Use `getReconcilePrompt` if schema changes detected, otherwise ready for deployment
+- **If tests fail**: Use `getFixupSuggestionsPrompt` to get specific code fixes for the identified failures
+- **If performance issues only**: Consider optimization, then use `getReconcilePrompt` to proceed with deployment
