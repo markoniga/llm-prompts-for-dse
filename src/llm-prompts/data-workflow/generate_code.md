@@ -158,6 +158,39 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 
 ## CODING STANDARDS (STRICTLY ENFORCED)
 
+### MACRO STYLE GUARDRAILS (STRICTLY ENFORCED)
+**Mandatory Requirements for all dbt macros:**
+- **<300 LOC per macro** - Break large macros into smaller, focused components
+- **2-space indentation** - Consistent with project standards  
+- **Jinja lint passes** - All Jinja code must pass linting checks
+
+**Macro Quality Standards:**
+```jinja2
+-- ✅ CORRECT: Clean, concise macro under 300 LOC
+{% macro calculate_customer_metrics(customer_table, orders_table) %}
+  
+  {% if execute %}
+    {% set metrics_query %}
+      SELECT 
+        customer_id
+        , COUNT(*) AS total_orders
+        , SUM(order_amount) AS lifetime_value
+      FROM {{ orders_table }}
+      GROUP BY customer_id
+    {% endset %}
+    
+    {{ return(metrics_query) }}
+  {% endif %}
+  
+{% endmacro %}
+
+-- ❌ WRONG: Overly complex macro exceeding LOC limits
+{% macro massive_transformation_macro() %}
+  -- 400+ lines of complex logic here
+  -- Should be broken into smaller, focused macros
+{% endmacro %}
+```
+
 ### SQL Formatting Rules
 ```sql
 -- ✅ CORRECT: Leading commas, meaningful aliases, proper indentation

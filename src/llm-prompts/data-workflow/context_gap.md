@@ -124,6 +124,8 @@ This prompt helps identify missing information needed to address a data workflow
 - "Valid transaction" → What validation criteria?
 
 ### Step 4: Formulate Strategic Follow-up Questions
+**MANDATORY REQUIREMENT: Ask ≥ 3 targeted questions before setting `can_proceed = true`**
+
 **Question Priority Framework:**
 - **Critical**: Cannot proceed without this information
 - **High**: Significantly impacts the approach or quality
@@ -135,6 +137,7 @@ This prompt helps identify missing information needed to address a data workflow
 - Clear purpose explained
 - Easy for user to answer
 - Prioritized by impact
+- **Minimum 3 questions required** for thorough context gathering
 
 ### Step 5: Design Exploratory Queries
 **Query Categories:**
