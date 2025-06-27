@@ -8,6 +8,28 @@
 ## Purpose
 This prompt helps generate targeted code fixes for failed tests, data quality issues, or performance problems in dbt models. It provides specific, actionable code changes to resolve identified issues while following project standards and best practices.
 
+## CRITICAL: QUERY OPTIMIZATION FIRST
+**⚠️ IMPORTANT: Always prioritize query optimization over macro creation when fixing issues**
+
+**For Performance Issues - Try These First:**
+1. **Optimize the SQL query itself** - improve joins, filtering, indexing
+2. **Simplify complex logic** - break down complicated CTEs and subqueries  
+3. **Fix inefficient patterns** - correlated subqueries, unnecessary DISTINCT, etc.
+4. **Implement better incremental strategies** - static predicates, partitioning
+5. **Only suggest macros** if the same optimization is needed across 3+ models
+
+**For Complex Logic Issues - Try These First:**
+1. **Refactor the query** - make it clearer and more maintainable
+2. **Add helpful comments** - explain complex business logic inline
+3. **Break into logical CTEs** - separate concerns into understandable steps
+4. **Simplify CASE statements** - reduce conditional complexity
+5. **Only suggest macros** if the logic is truly reusable across multiple models
+
+**Decision Framework:**
+- **Query issue?** → Optimize the query first, then suggest macro if reusable
+- **Logic issue?** → Simplify the logic first, then suggest macro if shared
+- **Reusability?** → Must be used in 3+ places to justify macro creation
+
 ## Usage
 Use this prompt after test failures or performance issues have been identified to get specific code suggestions to fix the problems.
 

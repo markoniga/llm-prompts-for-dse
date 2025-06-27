@@ -29,17 +29,56 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 - Business logic and transformations
 - Testing and validation requirements
 
-### Step 2: Apply Code Standards
+### Step 2: OPTIMIZE QUERY FIRST - MACRO CREATION IS LAST RESORT
+**CRITICAL: Always prioritize query optimization over macro creation**
+
+**Query Optimization Priority (FIRST APPROACH):**
+
+**Performance Optimization Techniques:**
+- **Index-friendly WHERE clauses**: Use static values, avoid functions on columns
+- **Efficient JOINs**: LEFT JOIN → INNER JOIN where possible, filter early
+- **Window functions**: Replace correlated subqueries with window functions
+- **CTE optimization**: Filter large datasets early, avoid unnecessary CTEs
+- **Incremental strategies**: Optimize predicates, use delete+insert for heavy updates
+
+**Query Simplification Techniques:**
+- **Reduce complexity**: Break complex logic into clear, simple steps
+- **Eliminate redundant calculations**: Calculate once, reuse in subsequent CTEs
+- **Optimize aggregations**: Use GROUP BY efficiently, avoid unnecessary DISTINCT
+- **Streamline CASE statements**: Simplify complex conditional logic
+- **Better column selection**: Only SELECT needed columns, avoid SELECT *
+
+**Database-Specific Optimizations:**
+- **Materialization hints**: Use appropriate materialization strategies  
+- **Partitioning**: Leverage date/time-based partitioning for large tables
+- **Indexing suggestions**: Recommend appropriate indexes for query patterns
+- **Database functions**: Use native functions for better performance
+
+**Macro Creation Guidelines (ONLY WHEN NEEDED):**
+- ⚠️ **Macro creation should be suggested to the user, not automatically implemented**
+- Only suggest macros when there's clear code reuse across 3+ models
+- Only when the same complex logic appears in multiple places
+- When business rules need consistent application across models
+- **ALWAYS ask user confirmation before creating macros**
+
+**Decision Matrix:**
+```
+Performance Issue? → Optimize the query first, then suggest macro if reusable
+Complex Logic? → Simplify the query first, then suggest macro if shared
+Repetitive Code? → Refactor the query first, then suggest macro if >3 uses
+```
+
+### Step 3: Apply Code Standards
 **Non-negotiable formatting rules:**
 - Leading commas on column lists
-- 4-space indentation
+- 2-space indentation (not 4-space)
 - Meaningful table aliases (not single letters)
 - Capitalized SQL keywords
 - CTE documentation for complex logic
 
-### Step 3: Generate Complete Implementation
+### Step 4: Generate Complete Implementation
 **Must include ALL of these components:**
-- Complete SQL code
+- Complete SQL code (optimized for performance)
 - Schema.yml entries with tests
 - Field documentation
 - Performance considerations
@@ -169,8 +208,28 @@ This prompt helps generate high-quality dbt code for models, macros, tests, and 
 
 ## CODING STANDARDS (STRICTLY ENFORCED)
 
-### MACRO STYLE GUARDRAILS (STRICTLY ENFORCED)
-**Mandatory Requirements for all dbt macros:**
+### MACRO CREATION GUIDELINES (USE SPARINGLY)
+**⚠️ IMPORTANT: Macros should be a LAST RESORT after query optimization**
+
+**Before Creating Macros - ASK THESE QUESTIONS:**
+1. **Can this query be optimized instead of creating a macro?**
+2. **Is this logic truly reused across 3+ different models?**
+3. **Would a simple query refactor solve the performance/complexity issue?**
+4. **Does the user specifically want a macro, or do they just want better performance?**
+
+**MACRO CREATION PROCESS:**
+1. **Optimize the query first** - Try performance improvements, simplification, better SQL patterns
+2. **Suggest macro creation to user** - Don't automatically create macros
+3. **Get explicit user approval** - User must confirm they want a macro vs optimized query
+4. **Only then create macro** if user confirms it's needed
+
+**When Macros ARE Appropriate:**
+- Same business logic used in 3+ different models
+- Complex calculations that need consistency across models
+- Database-specific SQL that needs abstraction
+- User explicitly requests macro creation
+
+**Mandatory Requirements IF creating macros:**
 - **<300 LOC per macro** - Break large macros into smaller, focused components
 - **2-space indentation** - Consistent with project standards  
 - **Lint with `dbt deps && dbt compile`** - All code must pass compilation before commit
