@@ -75,7 +75,7 @@ This prompt helps identify missing information needed to address a data workflow
   1. Question (Purpose: Why needed)
 
 ### 🔎 Suggested Queries
-1. **Purpose** → Query description → Expected insights
+1. **Schema Discovery** → `SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab'` → Real schema.table_name patterns from actual usage in details column
 2. **Purpose** → Query description → Expected insights
 
 ### 📚 Available Context
@@ -105,6 +105,17 @@ This prompt helps identify missing information needed to address a data workflow
 - What are the key fields and their types?
 - What are the relationships to other models?
 - Are there any constraints or business rules?
+
+**Schema Discovery Method (when needed):**
+```sql
+-- Query Used:
+-- Discover actual schemas and tables being used in practice
+SELECT *
+FROM preset.audit_logs
+WHERE entity_type='urn:preset:ws:sqllab'
+```
+This reveals real schema.table_name patterns from the `details` column showing actual usage like:
+- `money_movement.fct_deposits`, `warehouse_common.dim_accounts`, `finance.fct_custodian_account_revenue`
 
 **Common Schema Gaps:**
 - "orders model" → Which one? (stg_orders, fct_orders, dim_orders?)
@@ -193,9 +204,9 @@ This prompt helps identify missing information needed to address a data workflow
   1. What tests should validate the new field (format, referential integrity, etc.)? (Purpose: Ensure data quality for new field)
 
 ### 🔎 Suggested Queries
-1. **Identify available orders models** → `dbt ls --select '*order*'` → Complete list of order-related models to choose from
-2. **Check source data for promo codes** → `SELECT COUNT(*) as total, COUNT(promo_code) as with_promo...` → Confirms field exists, population rate, and length requirements
-3. **Examine promo code patterns** → `SELECT promo_code, COUNT(*) FROM source_orders...` → Common formats and patterns for validation rules
+1. **Discover order-related schemas** → `SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab' AND details LIKE '%order%'` → Real order tables/schemas from actual usage patterns
+2. **Identify available orders models** → `dbt ls --select '*order*'` → Complete list of order-related models to choose from
+3. **Check source data for promo codes** → `SELECT COUNT(*) as total, COUNT(promo_code) as with_promo...` → Confirms field exists, population rate, and length requirements
 
 ### 📚 Available Context
 - **models_found** → source_orders (source)... (1 total)
@@ -245,8 +256,9 @@ This prompt helps identify missing information needed to address a data workflow
   1. What's the purpose: troubleshooting an issue, onboarding, compliance review, or general understanding? (Purpose: Tailor explanation to actual need)
 
 ### 🔎 Suggested Queries
-1. **Map revenue model landscape** → `dbt ls --select '*revenue*' '*recognize*'` → All revenue-related models in the project
-2. **Understand revenue recognition timing** → `SELECT AVG(DATEDIFF(day, order_date...` → Recognition patterns by revenue type
+1. **Discover revenue schemas from usage** → `SELECT * FROM preset.audit_logs WHERE entity_type='urn:preset:ws:sqllab' AND details LIKE '%revenue%'` → Real revenue tables/schemas from actual usage patterns
+2. **Map revenue model landscape** → `dbt ls --select '*revenue*' '*recognize*'` → All revenue-related models in the project
+3. **Understand revenue recognition timing** → `SELECT AVG(DATEDIFF(day, order_date...` → Recognition patterns by revenue type
 
 ### 📚 Available Context
 - **models_found** → fct_revenue (fact)... (1 total)

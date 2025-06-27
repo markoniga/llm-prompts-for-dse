@@ -174,10 +174,27 @@ dbt build --select {{ models }} --profiles-dir ~/.dbt
 
 **NEVER query information_schema or system tables for schema discovery**
 
+**Schema Discovery Method (when needed):**
+```sql
+-- Query Used:
+-- Discover actual schemas and tables being used in practice
+SELECT *
+FROM preset.audit_logs
+WHERE entity_type='urn:preset:ws:sqllab'
+```
+This shows real SQL queries in the `details` column, revealing actual schema.table_name patterns like:
+- `money_movement.fct_deposits`
+- `warehouse_common.dim_accounts` 
+- `finance.fct_custodian_account_revenue`
+- `so_orders.orders`
+- `fort_knox.funding_intents_checklists`
+- `midas.manual_charges`
+
 **Available Production Schemas:**
 - **marts** (Final business logic tables): `activation`, `marketing`, `finance`, `trade`, `cash`, `credit`, `fraud`, `client_data`, `authentication`, `invest`, `crypto`, `sales`, `tax`
 - **prep** (Intermediate processing tables): `activation_backroom`, `marketing_backroom`, `finance_backroom`, `trade_backroom`, `cash_backroom`, `credit_backroom`, `fraud_backroom`, `tax_backroom`, etc.
 - **workspaces** (Specialized analysis): `experiments`, `fraud`, `ltv`, `feature_factory`, `hightouch`
+- **domain-specific**: `money_movement`, `warehouse_common`, `so_orders`, `fort_knox`, `midas`, etc.
 
 **Development Schema Notes:**
 - Username is derived from `DEV_SQL_SCHEMA_PREFIX` environment variable

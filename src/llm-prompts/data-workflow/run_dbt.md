@@ -160,6 +160,8 @@ When generating queries for Preset MCP, follow these critical rules:
      - `activation_backroom`, `marketing_backroom`, `finance_backroom`, etc.
    - **workspaces** (Specialized analysis schemas):
      - `experiments`, `fraud`, `ltv`, `feature_factory`, `hightouch`
+   - **domain-specific** (Operational system schemas):
+     - `money_movement`, `warehouse_common`, `so_orders`, `fort_knox`, `midas`, `preset`
 
 4. **Development Schema Format**
    - Always use `dev_<username>` for development queries
@@ -171,8 +173,17 @@ When generating queries for Preset MCP, follow these critical rules:
 6. **Schema Discovery**
    - Never query `information_schema` or system tables for schema discovery
    - Do not run exploratory queries like `SHOW SCHEMAS` or `SHOW TABLES`
-   - Find schema and table information within the data-vault repository
-   - Use the `dbt_project.yml` file as the authoritative source for available schemas
+   - **Primary method**: Find schema and table information within the data-vault repository
+   - **Secondary method**: Use `dbt_project.yml` file as the authoritative source for available schemas
+   - **Practical discovery**: Query actual usage patterns when needed:
+     ```sql
+     -- Query Used:
+     -- Discover real schemas and tables being used
+     SELECT *
+     FROM preset.audit_logs
+     WHERE entity_type='urn:preset:ws:sqllab'
+     ```
+     This reveals actual schema.table_name patterns from the `details` column in real SQL queries
 
 7. **Query Output Requirements**
    - Always display the SQL query used alongside the results
